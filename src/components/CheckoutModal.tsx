@@ -14,6 +14,8 @@ interface CheckoutModalProps {
   lang: Language;
   cartItems: CartItem[];
   onOrderCompleted: (newOrder: Order) => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  openUrlSafe: (url: string) => void;
 }
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
@@ -22,6 +24,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   lang,
   cartItems,
   onOrderCompleted,
+  showToast,
+  openUrlSafe,
 }) => {
   if (!isOpen) return null;
 
@@ -47,7 +51,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const handleCheckoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !phoneNumber.trim() || !city.trim()) {
-      alert(lang === 'so' ? 'Fadlan ku qor magacaaga, taleefanka, iyo magaalada!' : 'Please fill in Name, Phone, and City!');
+      showToast(
+        lang === 'so' ? 'Fadlan ku qor magacaaga, taleefanka, iyo magaalada!' : 'Please fill in Name, Phone, and City!',
+        'error'
+      );
       return;
     }
 
@@ -110,7 +117,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       `- Gateway: ${gatewaySelected.toUpperCase()}\n\n` +
       `Fadlan igu dhiib sida ugu dhakhsaha badan!`;
 
-    window.open(`https://wa.me/252634000000?text=${encodeURIComponent(waText)}`, '_blank');
+    openUrlSafe(`https://wa.me/252634000000?text=${encodeURIComponent(waText)}`);
   };
 
   return (

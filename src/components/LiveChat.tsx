@@ -125,7 +125,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({ lang }) => {
                 >
                   <p>{m.text}</p>
                 </div>
-                <span className={`text-[8px] text-slate-405 mt-1 block ${
+                <span className={`text-[8px] text-slate-400 mt-1 block ${
                   m.sender === 'customer' ? 'text-right' : 'text-left'
                 }`}>
                   {m.timestamp}

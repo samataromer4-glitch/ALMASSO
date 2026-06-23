@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Product, Order, Language } from '../types';
 import { TRANSLATIONS, CATEGORIES } from '../data/initialData';
+import { SUPABASE_SQL_CREATION } from '../lib/supabase';
 
 interface AdminDashboardProps {
   lang: Language;
@@ -18,6 +19,12 @@ interface AdminDashboardProps {
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   orders: Order[];
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  isDbConnected: 'connected' | 'error' | 'loading' | 'disconnected';
+  dbErrorMessage: string | null;
+  onReconnectDb: () => Promise<void>;
+  onProductChange: (product: Product, action: 'add' | 'update' | 'delete') => Promise<void>;
+  onOrderStatusChange: (orderId: string, nextStatus: 'pending' | 'shipped' | 'completed') => Promise<void>;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -27,6 +34,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   setProducts,
   orders,
   setOrders,
+  showToast,
+  isDbConnected,
+  dbErrorMessage,
+  onReconnectDb,
+  onProductChange,
+  onOrderStatusChange,
 }) => {
   const t = TRANSLATIONS[lang];
 
@@ -37,6 +50,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   // CRUD Product state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  
+  // Custom non-blocking delete target confirm state
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // Toggle SQL Copy setup guide for Postgres
+  const [showSqlGuide, setShowSqlGuide] = useState(false);
   
   // Form fields
   const [titleSo, setTitleSo] = useState('');
@@ -72,7 +91,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setStock(p.stock.toString());
     
     // Smooth scroll to top of form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      try {
+        window.scroll(0, 0);
+      } catch (err) {
+        // ignore iframe restricted scroll
+      }
+    }
   };
 
   const resetForm = () => {
@@ -91,7 +118,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!titleSo.trim() || !titleEn.trim() || !price) {
-      alert(lang === 'so' ? 'Fadlan geli macluumaadka saxda ah!' : 'Please check required fields!');
+      showToast(
+        lang === 'so' ? 'Fadlan geli macluumaadka saxda ah!' : 'Please check required fields!',
+        'error'
+      );
       return;
     }
 
@@ -101,8 +131,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     if (editingProduct) {
       // Edit mode
-      setProducts(prev => prev.map(p => p.id === editingProduct.id ? {
-        ...p,
+      const updatedProduct: Product = {
+        ...editingProduct,
         title: { so: titleSo, en: titleEn },
         category,
         price: parsedPrice,
@@ -110,9 +140,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         image: imageEmoji,
         description: { so: descSo, en: descEn },
         stock: parsedStock,
-      } : p));
+      };
+
+      setProducts(prev => prev.map(p => p.id === editingProduct.id ? updatedProduct : p));
       
-      alert(lang === 'so' ? 'Alaabta waa la cusboonaysiiyay!' : 'Product updated successfully!');
+      showToast(
+        lang === 'so' ? 'Alaabta waa la cusboonaysiiyay!' : 'Product updated successfully!',
+        'success'
+      );
+      onProductChange(updatedProduct, 'update');
     } else {
       // Add mode
       const newProduct: Product = {
@@ -129,23 +165,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       };
 
       setProducts(prev => [newProduct, ...prev]);
-      alert(lang === 'so' ? 'Alaabta cusub waa la faafiyay!' : 'Successfully published new product!');
+      showToast(
+        lang === 'so' ? 'Alaabta cusub waa la faafiyay!' : 'Successfully published new product!',
+        'success'
+      );
+      onProductChange(newProduct, 'add');
     }
 
     resetForm();
   };
 
   const handleDeleteProduct = (id: string) => {
-    if (confirm(lang === 'so' ? 'Ma hubaal inaad tirto alaabtan dukaanka?' : 'Are you sure you want to delete this product?')) {
-      setProducts(prev => prev.filter(p => p.id !== id));
-      if (editingProduct?.id === id) {
+    setDeleteTargetId(id);
+  };
+
+  const confirmDeleteProduct = () => {
+    if (deleteTargetId) {
+      const targetId = deleteTargetId;
+      setProducts(prev => prev.filter(p => p.id !== targetId));
+      if (editingProduct?.id === targetId) {
         resetForm();
       }
+      setDeleteTargetId(null);
+      showToast(
+        lang === 'so' ? 'Alaabta waa la tirtiray!' : 'Product deleted successfully!',
+        'success'
+      );
+      onProductChange({ id: targetId } as Product, 'delete');
     }
   };
 
   const updateOrderStatus = (orderId: string, nextStatus: 'pending' | 'shipped' | 'completed') => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
+    onOrderStatusChange(orderId, nextStatus);
   };
 
   // Financial calculations
@@ -281,6 +333,104 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               🍎
             </div>
           </div>
+        </div>
+
+        {/* Supabase PostgreSQL Server-Side Console Sync Status Panel */}
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+            <div className="flex items-center gap-3">
+              <div className={`h-11 w-11 rounded-2xl flex items-center justify-center text-lg shadow-sm shrink-0 ${
+                isDbConnected === 'connected' ? 'bg-emerald-50 text-emerald-600' :
+                isDbConnected === 'loading' ? 'bg-amber-50 text-amber-500 animate-spin' :
+                'bg-rose-50 text-rose-500'
+              }`}>
+                {isDbConnected === 'connected' ? '⚡' : isDbConnected === 'loading' ? '⌛' : '🔌'}
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="font-black text-slate-900 text-xs">
+                    {lang === 'so' ? 'Adeegga Keydka Supabase PostgreSQL' : 'Supabase PostgreSQL Database'}
+                  </h4>
+                  <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
+                    isDbConnected === 'connected' ? 'bg-emerald-100 text-emerald-800' :
+                    isDbConnected === 'loading' ? 'bg-amber-100 text-amber-800 animate-pulse' :
+                    'bg-slate-100 text-slate-800'
+                  }`}>
+                    {isDbConnected === 'connected' ? (lang === 'so' ? 'Ku Xiran' : 'Connected Live') :
+                     isDbConnected === 'loading' ? (lang === 'so' ? 'Rooraya...' : 'Connecting...') :
+                     (lang === 'so' ? 'Khad La\'aan' : 'Offline Backup Active')}
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-slate-500 font-medium">
+                  {isDbConnected === 'connected' 
+                    ? (lang === 'so' ? 'Dukaanku wuxuu si toos ah ula jaan-qaadayaa Postgres!' : 'All operations are synchronized live with your secure cloud db.')
+                    : (lang === 'so' ? 'Xogta waxaa lagu kaydinayaa browser-ka madaama aysan diyaar ahayn jadwalka database-ka.' : 'Using LocalStorage backup. Setup Postgres tables below to activate cloud persistence.')}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  onReconnectDb();
+                  showToast(lang === 'so' ? "La xiriiraya database-ka..." : "Re-connecting to database...", 'info');
+                }}
+                disabled={isDbConnected === 'loading'}
+                className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-extrabold px-3 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer text-[11px]"
+                title={lang === 'so' ? 'Cusboonaysii database' : 'Re-test Database connection'}
+              >
+                <RefreshCw size={11} className={isDbConnected === 'loading' ? 'animate-spin' : ''} />
+                <span>{lang === 'so' ? 'Tijaabi' : 'Test Sync'}</span>
+              </button>
+
+              {isDbConnected !== 'connected' && (
+                <button
+                  onClick={() => setShowSqlGuide(!showSqlGuide)}
+                  className="bg-amber-400 hover:bg-amber-500 text-slate-950 font-black px-3 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer text-[11px]"
+                >
+                  <Database size={11} />
+                  <span>{lang === 'so' ? 'Maamul' : 'Configure SQL'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Database Setup Accordion / Collapsible Instructions */}
+          {showSqlGuide && (isDbConnected !== 'connected') && (
+            <div className="mt-3 p-4 bg-slate-950 text-slate-300 rounded-2xl border border-slate-800 space-y-3 font-mono text-[10px] selection:bg-amber-400 selection:text-slate-950 animate-scale-up">
+              <div className="flex justify-between items-center text-slate-400 font-sans border-b border-slate-800 pb-2">
+                <span className="font-extrabold text-[11px] text-slate-200">
+                  🔧 Supabase SQL Schema Setup Guide
+                </span>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(SUPABASE_SQL_CREATION);
+                    showToast(lang === 'so' ? "SQL Script waa la koobiyeeyay!" : "SQL schema copied to clipboard!", 'success');
+                  }}
+                  className="bg-slate-900 hover:bg-slate-800 text-amber-400 font-black px-2.5 py-1 rounded-lg text-[9px] transition flex items-center gap-1 cursor-pointer"
+                >
+                  📋 {lang === 'so' ? 'Koobiye' : 'Copy Schema'}
+                </button>
+              </div>
+              <p className="font-sans text-slate-400 leading-relaxed text-[9.5px]">
+                {lang === 'so' 
+                  ? 'Si aad u bilowdo, gal dashboard-kaaga Supabase, guji "SQL Editor", ku dheji (paste) koodhka hoose, dabadeed guji Run si aad u sameyso jadwalka alaabta (products) iyo dalabyada (orders):'
+                  : 'To enable live sync, open your Supabase Dashboard, go to "SQL Editor", paste this schema script, and click "Run" to automatically instantiate the tables with Row-Level Security:'}
+              </p>
+              <pre className="overflow-x-auto max-h-40 p-3 bg-slate-900 rounded-xl text-slate-400 border border-slate-850 whitespace-pre scrollbar-thin scrollbar-thumb-slate-800 text-[9px]">
+                {SUPABASE_SQL_CREATION}
+              </pre>
+            </div>
+          )}
+          {dbErrorMessage && (isDbConnected === 'error' || isDbConnected === 'disconnected') && (
+            <div className="p-3 bg-rose-50 text-rose-700 leading-relaxed text-[10px] rounded-xl border border-rose-100 flex items-start gap-2">
+              <span className="text-sm">⚠️</span>
+              <div>
+                <span className="font-extrabold">{lang === 'so' ? 'Cilad: ' : 'Database Error: '}</span>
+                <span className="font-medium text-slate-600">{dbErrorMessage}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Console layout Split Grid */}
@@ -581,6 +731,46 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
       </main>
+
+      {/* Brand custom non-blocking Delete Confirmation Modal */}
+      {deleteTargetId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            onClick={() => setDeleteTargetId(null)}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+          ></div>
+          <div className="relative bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 animate-scale-up space-y-4 text-xs">
+            <div className="text-center space-y-2">
+              <div className="h-12 w-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center text-xl mx-auto select-none">
+                ⚠️
+              </div>
+              <h4 className="font-black text-slate-900 text-sm">
+                {lang === 'so' ? 'Ma hubaal inaad tirto?' : 'Confirm Deletion'}
+              </h4>
+              <p className="text-slate-500 font-medium leading-relaxed">
+                {lang === 'so' 
+                  ? 'Ma hubaal inaad tirto alaabtan dukaanka? Gelitaankan dib looma soo celin karo.'
+                  : 'Are you sure you want to delete this product? This action cannot be undone.'}
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setDeleteTargetId(null)}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl transition cursor-pointer"
+              >
+                {lang === 'so' ? 'Jooji' : 'Cancel'}
+              </button>
+              <button
+                onClick={confirmDeleteProduct}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 rounded-xl shadow transition cursor-pointer"
+              >
+                {lang === 'so' ? 'Hubaal' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

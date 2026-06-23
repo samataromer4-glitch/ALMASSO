@@ -15,6 +15,7 @@ import { LiveChat } from './components/LiveChat';
 import { Product, CartItem, Order, Language } from './types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, TRANSLATIONS } from './data/initialData';
 import { Lock, ShoppingCart, Info, Check, Sparkles, X, Phone, ShoppingBag } from 'lucide-react';
+import { supabase, mapProductToDb, mapProductFromDb, mapOrderToDb, mapOrderFromDb } from './lib/supabase';
 
 export default function App() {
   const [lang, setLang] = useState<Language>('so');
@@ -22,18 +23,31 @@ export default function App() {
 
   // Load state from LocalStorage so CRUD edits and Order records persist beautifully
   const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('almasso_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    try {
+      const saved = localStorage.getItem('almasso_products');
+      return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    } catch (e) {
+      console.warn("Storage access restricted. State will remain in memory.", e);
+      return INITIAL_PRODUCTS;
+    }
   });
 
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('almasso_orders');
-    return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+    try {
+      const saved = localStorage.getItem('almasso_orders');
+      return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+    } catch (e) {
+      return INITIAL_ORDERS;
+    }
   });
 
   const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('almasso_cart');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('almasso_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
   });
 
   // UI state managers
@@ -43,17 +57,163 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  // Custom premium Toast notification system to completely bypass browser alert() constraints in iframe sandbox
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
+
+  // Supabase live synchronization states
+  const [isDbConnected, setIsDbConnected] = useState<'connected' | 'error' | 'loading' | 'disconnected'>('loading');
+  const [dbErrorMessage, setDbErrorMessage] = useState<string | null>(null);
+
+  const fetchDbData = async () => {
+    try {
+      setIsDbConnected('loading');
+      
+      // 1. Fetch products
+      const { data: dbProducts, error: prodError } = await supabase
+        .from('almasso_products')
+        .select('*')
+        .order('id', { ascending: true });
+      
+      if (prodError) {
+        throw prodError;
+      }
+
+      // 2. Fetch orders
+      const { data: dbOrders, error: orderError } = await supabase
+        .from('almasso_orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (orderError) {
+        throw orderError;
+      }
+
+      // Update Local states and LocalStorage
+      if (dbProducts && dbProducts.length > 0) {
+        const mappedProducts = dbProducts.map(mapProductFromDb);
+        setProducts(mappedProducts);
+      } else {
+        // If connected successfully but database is completely empty (initial setup),
+        // let's bootstrap it by inserting INITIAL_PRODUCTS so the user has beautiful instant items!
+        const rows = INITIAL_PRODUCTS.map(mapProductToDb);
+        const { error: seedError } = await supabase.from('almasso_products').insert(rows);
+        if (seedError) {
+          console.warn("Bootstrap seed products failed", seedError);
+        } else {
+          console.log("Database seeded successfully with initial products selection!");
+        }
+      }
+
+      if (dbOrders && dbOrders.length > 0) {
+        const mappedOrders = dbOrders.map(mapOrderFromDb);
+        setOrders(mappedOrders);
+      }
+
+      setIsDbConnected('connected');
+      setDbErrorMessage(null);
+    } catch (err: any) {
+      console.warn("Database sync fallbacked to LocalStorage. Setup Postgres schema or verify keys.", err);
+      setIsDbConnected('error');
+      setDbErrorMessage(err?.message || "Ensure your Supabase PostgreSQL tables are created in the SQL Editor.");
+    }
+  };
+
+  // Run on mount
+  useEffect(() => {
+    fetchDbData();
+  }, []);
+
+  const handleProductChange = async (product: Product, action: 'add' | 'update' | 'delete') => {
+    if (isDbConnected !== 'connected') {
+      console.warn("Direct write skipped. Database is not online.");
+      return;
+    }
+
+    try {
+      if (action === 'delete') {
+        const { error } = await supabase
+          .from('almasso_products')
+          .delete()
+          .eq('id', product.id);
+        if (error) throw error;
+      } else {
+        // add or update (uses upsert)
+        const row = mapProductToDb(product);
+        const { error } = await supabase
+          .from('almasso_products')
+          .upsert(row);
+        if (error) throw error;
+      }
+    } catch (err: any) {
+      console.error("Failed to sync product change to Supabase:", err);
+      showToast(
+        lang === 'so' 
+          ? `Cilad: Ma qorankaro xogta daruurta`
+          : `Error: Could not sync change to database`,
+        'error'
+      );
+    }
+  };
+
+  const handleOrderStatusChange = async (orderId: string, nextStatus: 'pending' | 'shipped' | 'completed') => {
+    if (isDbConnected !== 'connected') {
+      console.warn("Direct order state write skipped. Database is not online.");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('almasso_orders')
+        .update({ status: nextStatus })
+        .eq('id', orderId);
+      if (error) throw error;
+    } catch (err: any) {
+      console.error("Failed to sync order status change to Supabase:", err);
+      showToast(
+        lang === 'so' 
+          ? `Cilad ku timid xogta daruurta`
+          : `Order status sync error`,
+        'error'
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   // Synchronizers
   useEffect(() => {
-    localStorage.setItem('almasso_products', JSON.stringify(products));
+    try {
+      localStorage.setItem('almasso_products', JSON.stringify(products));
+    } catch (e) {
+      // ignore
+    }
   }, [products]);
 
   useEffect(() => {
-    localStorage.setItem('almasso_orders', JSON.stringify(orders));
+    try {
+      localStorage.setItem('almasso_orders', JSON.stringify(orders));
+    } catch (e) {
+      // ignore
+    }
   }, [orders]);
 
   useEffect(() => {
-    localStorage.setItem('almasso_cart', JSON.stringify(cart));
+    try {
+      localStorage.setItem('almasso_cart', JSON.stringify(cart));
+    } catch (e) {
+      // ignore
+    }
   }, [cart]);
 
   const t = TRANSLATIONS[lang];
@@ -88,6 +248,46 @@ export default function App() {
     setCart(prev => prev.filter(item => item.id !== productId));
   };
 
+  const scrollToTopSafe = () => {
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      try {
+        window.scroll(0, 0);
+      } catch (err) {
+        // silence any blocked iframe scrolling issues
+      }
+    }
+  };
+
+  const openUrlSafe = (url: string) => {
+    try {
+      // In sandboxed iframes, programmatic click handles can cause Script errors.
+      // Direct window.open with a fallback copy-to-clipboard avoids DOM insertion risks entirely.
+      const win = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!win) {
+        throw new Error("Blocked");
+      }
+    } catch (e) {
+      try {
+        navigator.clipboard.writeText(url);
+        showToast(
+          lang === 'so' 
+            ? "Url dukaanka ayaa la koobiyeeyay maadaama popup la xannibay!" 
+            : "WhatsApp link copied to clipboard (Popup was blocked)!",
+          'info'
+        );
+      } catch (clipError) {
+        showToast(
+          lang === 'so' 
+            ? "Taleefankaaga/Browser-kaaga ayaa xannibay daaqada furan." 
+            : "Your secure browser has blocked opening the WhatsApp window.",
+          'info'
+        );
+      }
+    }
+  };
+
   // WhatsApp individual product message formulation
   const handleWhatsAppProductOrder = (product: Product) => {
     const priceText = product.discountPrice !== null ? product.discountPrice : product.price;
@@ -98,35 +298,61 @@ export default function App() {
       `- Qiimaha: $${priceText.toFixed(2)}\n\n` +
       `Fadlan ila soo xiriir si aan u dhamaystiro dhiibista dalka gudihiisa. Mahadsanid!`;
     
-    window.open(`https://wa.me/252634000000?text=${encodeURIComponent(descText)}`, '_blank');
+    openUrlSafe(`https://wa.me/252634000000?text=${encodeURIComponent(descText)}`);
   };
 
-  const handleOrderCompleted = (newOrder: Order) => {
+  const handleOrderCompleted = async (newOrder: Order) => {
     // Append to orders state (persists in localStorage and immediately updates the live Admin dashboard stats!)
     setOrders(prev => [newOrder, ...prev]);
 
     // Subtract purchased product inventory counts immediately as specified in spec:
     // "Live Revenue Analytics: Cards highlighting Cumulative Sales in USD, Active Pending Orders count, and live inventory item levels."
-    setProducts(prevProducts => {
-      return prevProducts.map(p => {
-        const matchingCartItem = cart.find(c => c.id === p.id);
-        if (matchingCartItem) {
-          const nextStock = Math.max(0, p.stock - matchingCartItem.quantity);
-          return { ...p, stock: nextStock };
-        }
-        return p;
-      });
+    const updatedProducts = products.map(p => {
+      const matchingCartItem = cart.find(c => c.id === p.id);
+      if (matchingCartItem) {
+        const nextStock = Math.max(0, p.stock - matchingCartItem.quantity);
+        return { ...p, stock: nextStock };
+      }
+      return p;
     });
+
+    setProducts(updatedProducts);
 
     // Clear cart
     setCart([]);
     setIsCheckoutOpen(false);
 
     // Dynamic prompt telling the user the direct STK action completed
-    alert(lang === 'so' 
-      ? `Nasiib Wanaagsan! Dalabkaaga ${newOrder.id} waa la gudbiyay. Fadlan eeg taleefankaaga si aad u xaqiijiso Pin-ka!`
-      : `Success! Order ${newOrder.id} successfully queued. Please review your mobile handset for prompt authorization.`
+    showToast(
+      lang === 'so' 
+        ? `Nasiib Wanaagsan! Dalabkaaga ${newOrder.id} waa la gudbiyay.`
+        : `Success! Order ${newOrder.id} successfully queued.`,
+      'success'
     );
+
+    // Asynchronously synchronize this transaction with Supabase database (non-blocking)
+    if (isDbConnected === 'connected') {
+      try {
+        const { error: orderError } = await supabase
+          .from('almasso_orders')
+          .insert(mapOrderToDb(newOrder));
+        
+        if (orderError) throw orderError;
+
+        // Synchronize corresponding product stock levels
+        for (const item of cart) {
+          const matchedProd = updatedProducts.find(p => p.id === item.id);
+          if (matchedProd) {
+            await supabase
+              .from('almasso_products')
+              .update({ stock: matchedProd.stock })
+              .eq('id', matchedProd.id);
+          }
+        }
+      } catch (err: any) {
+        console.error("Supabase order synchronization failed:", err);
+      }
+    }
   };
 
   // Filter products by category & queries
@@ -278,9 +504,9 @@ export default function App() {
                 <button
                   onClick={() => {
                     setCurrentView('admin');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    scrollToTopSafe();
                   }}
-                  className="bg-slate-800 hover:bg-amber-400 hover:text-slate-950 text-slate-205 font-black px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 pointer-events-auto"
+                  className="bg-slate-800 hover:bg-amber-400 hover:text-slate-950 text-slate-200 font-black px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 pointer-events-auto"
                   id="merchant-footer-gate-btn"
                 >
                   <Lock size={12} />
@@ -316,6 +542,8 @@ export default function App() {
             lang={lang}
             cartItems={cart}
             onOrderCompleted={handleOrderCompleted}
+            showToast={showToast}
+            openUrlSafe={openUrlSafe}
           />
 
           {/* Live messaging help box bubble */}
@@ -408,7 +636,33 @@ export default function App() {
           setProducts={setProducts}
           orders={orders}
           setOrders={setOrders}
+          showToast={showToast}
+          isDbConnected={isDbConnected}
+          dbErrorMessage={dbErrorMessage}
+          onReconnectDb={fetchDbData}
+          onProductChange={handleProductChange}
+          onOrderStatusChange={handleOrderStatusChange}
         />
+      )}
+
+      {/* Floating custom Toast notification banner */}
+      {toast && (
+        <div className="fixed top-5 right-5 z-200 flex items-center gap-3 bg-slate-950 border border-slate-800 text-white px-5 py-3.5 rounded-2xl shadow-2xl animate-scale-up max-w-sm pointer-events-auto">
+          <div className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+            toast.type === 'success' ? 'bg-emerald-500 text-slate-950' :
+            toast.type === 'error' ? 'bg-rose-500 text-white' :
+            'bg-amber-400 text-slate-950'
+          }`}>
+            {toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : 'ℹ'}
+          </div>
+          <p className="text-[11px] font-extrabold text-slate-100">{toast.message}</p>
+          <button 
+            onClick={() => setToast(null)}
+            className="text-slate-500 hover:text-slate-300 ml-auto pl-2 font-black text-xs select-none"
+          >
+            ✕
+          </button>
+        </div>
       )}
 
     </div>
