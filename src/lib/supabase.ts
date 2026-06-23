@@ -1,11 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 import { Product, Order } from '../types';
 
-// Retrieve credentials safely from environment variables (with user-provided defaults)
-const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL || 'https://wexwgkhvhfdygdnspguz.supabase.co';
-const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || 'sb_publishable__aU89hXxkJg8p46pWAotxQ_kXArOPcd';
+// Retrieve credentials safely from environment variables (with robust parsing for raw IDs or complete URLs)
+const getSanitizedConfig = () => {
+  let rawUrl = ((import.meta as any).env?.VITE_SUPABASE_URL || 'https://wexwgkhvhfdygdnspguz.supabase.co').trim();
+  
+  // If the user pasted just the project reference code, reconstruct the full secure URL
+  const supabaseUrl = (rawUrl.startsWith('http://') || rawUrl.startsWith('https://'))
+    ? rawUrl
+    : `https://${rawUrl}.supabase.co`;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabaseAnonKey = ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'sb_publishable__aU89hXxkJg8p46pWAotxQ_kXArOPcd').trim();
+
+  return { supabaseUrl, supabaseAnonKey };
+};
+
+const config = getSanitizedConfig();
+export const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
 
 /**
  * DB Table Schemas definition for Supabase SQL Editor.

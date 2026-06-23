@@ -3,7 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>Almasso</title>
+    <script>
+      // Crucial capturing error listener targeting browser extension / iframe "Script error."
+      window.addEventListener('error', function(event) {
+        var message = event.message || '';
+        if (!message || message.indexOf('Script error') > -1 || message.toLowerCase().indexOf('script error') > -1) {
+          event.stopImmediatePropagation();
+          event.preventDefault();
+          console.warn('Prevented cross-origin/browser extension noise event propagation:', event);
+          return true;
+        }
+      }, true); // useCapture = true to intercept before other handlers
+
+      window.addEventListener('unhandledrejection', function(event) {
+        var message = (event.reason && event.reason.message) || '';
+        if (!message || message.indexOf('Script error') > -1 || message.toLowerCase().indexOf('script error') > -1) {
+          event.stopImmediatePropagation();
+          event.preventDefault();
+          console.warn('Prevented unhandled rejection cross-origin noise event propagation:', event);
+          return true;
+        }
+      }, true);
+    </script>
   </head>
   <body>
     <div id="root"></div>

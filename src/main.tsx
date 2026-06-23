@@ -6,7 +6,14 @@ import './index.css';
 // Mitigate third-party or cross-origin iframe "Script error" messages gracefully
 try {
   window.addEventListener('error', (event) => {
-    if (event.message && (event.message.includes('Script error') || event.message.includes('Script error.'))) {
+    if (!event.message || event.message.includes('Script error') || event.message.includes('Script error.')) {
+      event.preventDefault();
+      return true;
+    }
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    const msg = event.reason?.message || '';
+    if (!msg || msg.includes('Script error') || msg.includes('Script error.')) {
       event.preventDefault();
       return true;
     }
