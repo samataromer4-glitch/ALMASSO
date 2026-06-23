@@ -63,10 +63,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [category, setCategory] = useState('electronics');
   const [price, setPrice] = useState('');
   const [discountPrice, setDiscountPrice] = useState('');
-  const [imageEmoji, setImageEmoji] = useState('💻');
+  const [imageEmoji, setImageEmoji] = useState('📦');
   const [descSo, setDescSo] = useState('');
   const [descEn, setDescEn] = useState('');
   const [stock, setStock] = useState('10');
+  const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload');
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +91,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setDescEn(p.description.en);
     setStock(p.stock.toString());
     
+    // Auto-detect image source category mode for the multi-tab layout
+    if (p.image && (p.image.startsWith('http://') || p.image.startsWith('https://'))) {
+      setImageMode('url');
+    } else {
+      setImageMode('upload');
+    }
+    
     // Smooth scroll to top of form
     try {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -109,10 +117,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setCategory('electronics');
     setPrice('');
     setDiscountPrice('');
-    setImageEmoji('💻');
+    setImageEmoji('📦');
     setDescSo('');
     setDescEn('');
     setStock('10');
+    setImageMode('upload');
   };
 
   const handleProductSubmit = (e: React.FormEvent) => {
@@ -404,8 +413,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </span>
                 <button 
                   onClick={() => {
-                    navigator.clipboard.writeText(SUPABASE_SQL_CREATION);
-                    showToast(lang === 'so' ? "SQL Script waa la koobiyeeyay!" : "SQL schema copied to clipboard!", 'success');
+                    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                      navigator.clipboard.writeText(SUPABASE_SQL_CREATION)
+                        .then(() => {
+                          showToast(lang === 'so' ? "SQL Script waa la koobiyeeyay!" : "SQL schema copied to clipboard!", 'success');
+                        })
+                        .catch((err) => {
+                          console.warn("Clipboard blocked", err);
+                          showToast(lang === 'so' ? "Fadlan koodhka hoose gacanta kaga koobiyeey dusha" : "Clipboard blocked. Please copy the code below manually.", 'info');
+                        });
+                    } else {
+                      showToast(lang === 'so' ? "Fadlan koodhka hoose gacanta kaga koobiyeey dusha" : "Clipboard blocked. Please copy the code below manually.", 'info');
+                    }
                   }}
                   className="bg-slate-900 hover:bg-slate-800 text-amber-400 font-black px-2.5 py-1 rounded-lg text-[9px] transition flex items-center gap-1 cursor-pointer"
                 >
@@ -437,145 +456,322 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Inventory Controller form block (CRUD) */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4 lg:col-span-1 h-fit shrink-0">
-            <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
-              <h3 className="font-black text-slate-900 text-sm flex items-center gap-1.5">
-                <Layers className="text-amber-500" size={16} />
-                <span>{editingProduct ? t.editProdBtn : t.addProdBtn}</span>
-              </h3>
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden lg:col-span-1 h-fit shrink-0">
+            {/* Form Header */}
+            <div className="bg-slate-900 text-white p-4.5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-amber-400 rounded-lg text-slate-950 font-black">
+                  <Layers size={14} />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-white text-[12px] tracking-tight">
+                    {editingProduct ? t.editProdBtn : t.addProdBtn}
+                  </h3>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                    {editingProduct ? (lang === 'so' ? 'HAYSO ISBEDELKA' : 'MODIFY ACTIVE ITEM') : (lang === 'so' ? 'KU DAR ALAAB QIIMO LEH' : 'PUBLISH NEW CATALOG ITEM')}
+                  </p>
+                </div>
+              </div>
               {editingProduct && (
                 <button 
                   onClick={resetForm}
-                  className="bg-slate-100 text-slate-500 px-2 py-1 rounded-lg text-[9px] font-bold"
+                  className="bg-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded-lg text-[9px] font-bold border border-slate-700/80 transition"
                 >
                   {t.cancelBtn}
                 </button>
               )}
             </div>
 
-            <form onSubmit={handleProductSubmit} className="space-y-3">
-              <div className="space-y-0.5">
-                <label className="font-extrabold text-slate-500">{t.formTitleSo} *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Saliid Macsaro Saafi ah"
-                  value={titleSo}
-                  onChange={(e) => setTitleSo(e.target.value)}
-                  className="w-full border border-slate-200/80 px-3 py-2 rounded-lg bg-slate-50 focus:outline-none focus:bg-white text-xs"
-                />
-              </div>
-
-              <div className="space-y-0.5">
-                <label className="font-extrabold text-slate-500">{t.formTitleEn} *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Organic Sesame Oil"
-                  value={titleEn}
-                  onChange={(e) => setTitleEn(e.target.value)}
-                  className="w-full border border-slate-200/80 px-3 py-2 rounded-lg bg-slate-50 focus:outline-none focus:bg-white text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="space-y-0.5">
-                  <label className="font-extrabold text-slate-500">{t.formCategory}</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full border border-slate-200/80 px-2.5 py-1.8 rounded-lg bg-slate-50 focus:outline-none focus:bg-white text-xs"
-                  >
-                    {CATEGORIES.filter(c => c.id !== 'all').map(cat => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name[lang]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-0.5">
-                  <label className="font-extrabold text-slate-500">{t.formImageEmoji}</label>
+            <div className="p-5 space-y-4">
+              <form onSubmit={handleProductSubmit} className="space-y-4">
+                
+                {/* Product Title SOMALI */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <label className="font-extrabold text-slate-700 text-[10px] uppercase tracking-wider">{t.formTitleSo} *</label>
+                    <span className="text-[9px] text-slate-400 font-extrabold tracking-wider bg-slate-100 px-1.5 py-0.5 rounded uppercase">SOMALI</span>
+                  </div>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 🏺"
-                    value={imageEmoji}
-                    onChange={(e) => setImageEmoji(e.target.value)}
-                    className="w-full border border-slate-200/80 px-3 py-1.5 rounded-lg bg-slate-50 focus:outline-none focus:bg-white text-center text-lg"
+                    placeholder="e.g. Saliid Macsaro Saafi ah"
+                    value={titleSo}
+                    onChange={(e) => setTitleSo(e.target.value)}
+                    className="w-full border border-slate-200 px-3 py-2 rounded-xl bg-slate-50 focus:outline-none focus:bg-white focus:ring-1 focus:ring-amber-500 text-xs font-bold text-slate-800"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="space-y-0.5">
-                  <label className="font-extrabold text-slate-500">{t.formPrice} *</label>
+                {/* Product Title ENGLISH */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <label className="font-extrabold text-slate-700 text-[10px] uppercase tracking-wider">{t.formTitleEn} *</label>
+                    <span className="text-[9px] text-slate-400 font-extrabold tracking-wider bg-slate-100 px-1.5 py-0.5 rounded uppercase">ENGLISH</span>
+                  </div>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     required
-                    placeholder="18.00"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    className="w-full border border-slate-200/80 px-3 py-2 rounded-lg bg-slate-50 focus:outline-none focus:bg-white text-xs font-bold"
+                    placeholder="e.g. Organic Sesame Oil"
+                    value={titleEn}
+                    onChange={(e) => setTitleEn(e.target.value)}
+                    className="w-full border border-slate-200 px-3 py-2 rounded-xl bg-slate-50 focus:outline-none focus:bg-white focus:ring-1 focus:ring-amber-500 text-xs font-bold text-slate-800"
                   />
                 </div>
 
-                <div className="space-y-0.5">
-                  <label className="font-extrabold text-slate-500">{t.formDiscountPrice}</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="15.00"
-                    value={discountPrice}
-                    onChange={(e) => setDiscountPrice(e.target.value)}
-                    className="w-full border border-slate-200/80 px-3 py-2 rounded-lg bg-slate-50 focus:outline-none focus:bg-white text-xs"
-                  />
+                {/* Category & Stock in a neat sub-grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="font-extrabold text-slate-700 text-[10px] uppercase tracking-wider">{t.formCategory}</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full border border-slate-200 px-2.5 py-2 rounded-xl bg-slate-50 focus:outline-none focus:bg-white text-xs font-bold text-slate-700 cursor-pointer"
+                    >
+                      {CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name[lang]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-extrabold text-slate-700 text-[10px] uppercase tracking-wider">{t.formStock}</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      placeholder="30"
+                      value={stock}
+                      onChange={(e) => setStock(e.target.value)}
+                      className="w-full border border-slate-200 px-3 py-2 rounded-xl bg-slate-50 focus:outline-none focus:bg-white text-xs font-bold text-slate-800"
+                    />
+                  </div>
+                </div>
+
+                {/* Pricing in grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="font-extrabold text-slate-700 text-[10px] uppercase tracking-wider">{t.formPrice} *</label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-xs">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        min="0.1"
+                        placeholder="18.00"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="w-full border border-slate-200 pl-7 pr-3 py-2 rounded-xl bg-slate-50 focus:outline-none focus:bg-white focus:ring-1 focus:ring-amber-500 text-xs font-black text-slate-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-extrabold text-slate-700 text-[10px] uppercase tracking-wider">{t.formDiscountPrice}</label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-xs">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="15.00"
+                        value={discountPrice}
+                        onChange={(e) => setDiscountPrice(e.target.value)}
+                        className="w-full border border-slate-200 pl-7 pr-3 py-2 rounded-xl bg-slate-50 focus:outline-none focus:bg-white focus:ring-1 focus:ring-amber-500 text-xs font-bold text-rose-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* High Fidelity Custom Image uploading & selecting module */}
+                <div className="space-y-2 border border-slate-100 rounded-2xl p-3 bg-slate-50/55">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                    <span className="font-black text-slate-800 text-[10.5px]">SAWIRKA / ASTAANTA</span>
+                    <span className="text-[9px] text-slate-400 font-extrabold bg-white px-2 py-0.5 rounded-full border shadow-xs">ADVANCED</span>
+                  </div>
+
+                  {/* Image input selector tabs */}
+                  <div className="grid grid-cols-2 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setImageMode('upload')}
+                      className={`py-1.5 px-1 rounded-lg text-[9px] font-black transition text-center ${
+                        imageMode === 'upload' 
+                          ? 'bg-slate-900 text-white shadow-sm' 
+                          : 'bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-700 border border-slate-100'
+                      }`}
+                    >
+                      📁 {lang === 'so' ? 'Soo Geli' : 'Upload File'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageMode('url')}
+                      className={`py-1.5 px-1 rounded-lg text-[9px] font-black transition text-center ${
+                        imageMode === 'url' 
+                          ? 'bg-slate-900 text-white shadow-sm' 
+                          : 'bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-700 border border-slate-100'
+                      }`}
+                    >
+                      🌐 {lang === 'so' ? 'Link Sawirka' : 'Web URL'}
+                    </button>
+                  </div>
+
+                  {/* Tab 1: File Uploader */}
+                  {imageMode === 'upload' && (
+                    <div className="space-y-2.5 pt-1.5 animate-scale-up">
+                      <div className="relative border-2 border-dashed border-slate-200 hover:border-amber-450 bg-white rounded-xl p-4 transition text-center cursor-pointer group">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setImageEmoji(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                        />
+                        <div className="space-y-1">
+                          <p className="text-[17px] group-hover:scale-110 transition duration-200">📸</p>
+                          <p className="text-[10px] font-extrabold text-slate-700">
+                            {lang === 'so' ? 'Guji halkan si aad u dooratid sawir' : 'Click here to capture or upload photo'}
+                          </p>
+                          <p className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">PNG, JPG, WEBP, GIF</p>
+                        </div>
+                      </div>
+
+                      {imageEmoji && imageEmoji.startsWith('data:image/') && (
+                        <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100">
+                          <div className="h-10 w-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-white">
+                            <img src={imageEmoji} alt="Preview" className="w-full h-full object-contain p-0.5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-extrabold text-slate-700 text-[8.5px] truncate">Uploaded_base64_entity.png</p>
+                            <p className="text-[8px] text-emerald-600 font-black tracking-wide uppercase">FILE_READY</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setImageEmoji('📦')}
+                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-[9px] px-2 py-1 rounded"
+                          >
+                            Tirtir
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tab 2: Paste Image Web URL */}
+                  {imageMode === 'url' && (
+                    <div className="space-y-1.5 pt-1.5 animate-scale-up">
+                      <input
+                        type="url"
+                        placeholder="https://images.unsplash.com/photo-..."
+                        value={imageEmoji.startsWith('http') ? imageEmoji : ''}
+                        onChange={(e) => setImageEmoji(e.target.value)}
+                        className="w-full border border-slate-200 px-3 py-2 rounded-xl bg-white text-[10.5px] font-medium text-slate-750 focus:outline-none"
+                      />
+                      <p className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider leading-relaxed">
+                        Provide a clean unrequested Hotlinked product graphic CDN address.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sub-grid for Descriptions */}
+                <div className="grid grid-cols-1 gap-2 border-t border-slate-100 pt-3">
+                  <div className="space-y-1">
+                    <label className="font-extrabold text-slate-700 text-[10px] uppercase tracking-wider">{t.formDescSo}</label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Saliid Macsaro jilicsan oo jidhka iyo cuntada u fiican..."
+                      value={descSo}
+                      onChange={(e) => setDescSo(e.target.value)}
+                      className="w-full border border-slate-200 px-3 py-2 rounded-xl bg-slate-50 focus:outline-none text-xs font-medium text-slate-700 focus:bg-white resize-none"
+                    ></textarea>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-extrabold text-slate-700 text-[10px] uppercase tracking-wider">{t.formDescEn}</label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Rich high-grade organic pure sesame extracts..."
+                      value={descEn}
+                      onChange={(e) => setDescEn(e.target.value)}
+                      className="w-full border border-slate-200 px-3 py-2 rounded-xl bg-slate-50 focus:outline-none text-xs font-medium text-slate-700 focus:bg-white resize-none"
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* Submit Action Block */}
+                <button
+                  type="submit"
+                  className="w-full bg-slate-900 hover:bg-amber-400 hover:text-slate-900 text-white font-black py-3 rounded-xl tracking-wide transition duration-200 shadow-md flex items-center justify-center gap-2 pointer-events-auto"
+                  id="admin-save-product-btn"
+                >
+                  <Plus size={14} />
+                  <span>{editingProduct ? t.editProdBtn : t.addProdBtn}</span>
+                </button>
+              </form>
+
+              {/* LIVE CLIENT MOCK-UP PRODUCT PREVIEW CARD */}
+              <div className="border-t border-slate-100 pt-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-500 text-[11px] animate-pulse">●</span>
+                  <p className="font-black text-slate-400 text-[8.5px] uppercase tracking-widest">
+                    HORDHAC: Sida dukaanka loogu arkayo (Live Customer Card Mockup)
+                  </p>
+                </div>
+
+                <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-3.5 flex flex-col justify-between relative scale-95 origin-top select-none pointer-events-none">
+                  {/* Image render mockup */}
+                  <div className="bg-white border rounded-xl relative aspect-square w-full flex items-center justify-center select-none overflow-hidden mb-3">
+                    {imageEmoji && (imageEmoji.startsWith('http://') || imageEmoji.startsWith('https://') || imageEmoji.startsWith('data:image/') || imageEmoji.includes('.') || imageEmoji.includes('/')) ? (
+                      <img src={imageEmoji} alt="Mock preview" className="w-full h-full object-contain p-2" />
+                    ) : (
+                      <span className="text-5xl">{imageEmoji || '📦'}</span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-[8px] font-black text-amber-600 block tracking-widest uppercase">
+                      {category}
+                    </span>
+                    <h4 className="font-bold text-slate-900 text-xs truncate">
+                      {lang === 'so' ? (titleSo || 'Cinwaanka Alaabta') : (titleEn || 'Product Presentation Name')}
+                    </h4>
+                  </div>
+
+                  <div className="pt-2 mt-2 border-t border-slate-100/70 flex justify-between items-center">
+                    <div>
+                      {discountPrice ? (
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-[10px] line-through text-slate-400">
+                            ${parseFloat(price || '0').toFixed(2)}
+                          </span>
+                          <span className="text-xs font-black text-slate-900">
+                            ${parseFloat(discountPrice || '0').toFixed(2)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs font-black text-slate-900">
+                          ${parseFloat(price || '0').toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                    <span className="bg-slate-900 text-white font-extrabold text-[8px] px-2 py-1 rounded">
+                      + Kariirada
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-0.5">
-                <label className="font-extrabold text-slate-500">{t.formStock}</label>
-                <input
-                  type="number"
-                  required
-                  placeholder="30"
-                  value={stock}
-                  onChange={(e) => setStock(e.target.value)}
-                  className="w-full border border-slate-200/80 px-3 py-2 rounded-lg bg-slate-50 focus:outline-none text-xs"
-                />
-              </div>
-
-              <div className="space-y-0.5">
-                <label className="font-extrabold text-slate-500">{t.formDescSo}</label>
-                <textarea
-                  rows={2}
-                  placeholder="Ku qor sharaxaad kooban oo Soomaali ah..."
-                  value={descSo}
-                  onChange={(e) => setDescSo(e.target.value)}
-                  className="w-full border border-slate-200/80 px-3 py-2 rounded-lg bg-slate-50 focus:outline-none text-xs"
-                ></textarea>
-              </div>
-
-              <div className="space-y-0.5">
-                <label className="font-extrabold text-slate-500">{t.formDescEn}</label>
-                <textarea
-                  rows={2}
-                  placeholder="Enter a short English descriptive copy..."
-                  value={descEn}
-                  onChange={(e) => setDescEn(e.target.value)}
-                  className="w-full border border-slate-200/80 px-3 py-2 rounded-lg bg-slate-50 focus:outline-none text-xs"
-                ></textarea>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-slate-900 hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.8 rounded-xl transition"
-                id="admin-save-product-btn"
-              >
-                {editingProduct ? t.editProdBtn : t.addProdBtn}
-              </button>
-            </form>
+            </div>
           </div>
 
           {/* Right column: Orders ledger, followed by live product lists for edits */}
@@ -690,7 +886,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   products.map((p) => (
                     <div key={p.id} className="py-3.5 flex justify-between items-center hover:bg-slate-50/50 px-2 rounded-xl transition duration-150">
                       <div className="flex items-center gap-3">
-                        <span className="text-3xl select-none">{p.image}</span>
+                        <div className="h-11 w-11 bg-white border border-slate-200 rounded-xl flex items-center justify-center select-none overflow-hidden shrink-0">
+                          {p.image && (p.image.startsWith('http://') || p.image.startsWith('https://') || p.image.startsWith('data:image/') || p.image.includes('.') || p.image.includes('/')) ? (
+                            <img src={p.image} alt={p.title[lang]} className="w-full h-full object-contain p-0.5" referrerPolicy="no-referrer" />
+                          ) : (
+                            <span className="text-xl">{p.image}</span>
+                          )}
+                        </div>
                         <div className="space-y-0.5">
                           <p className="font-bold text-slate-950 text-xs">{p.title[lang]}</p>
                           <p className="text-[10px] text-slate-400 font-medium">

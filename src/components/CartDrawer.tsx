@@ -96,8 +96,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     className="flex gap-4 p-3.5 bg-slate-50 border border-slate-100 rounded-2xl relative group hover:border-slate-250 transition duration-200"
                   >
                     {/* Item symbol illustration card */}
-                    <div className="h-14 w-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-3xl shrink-0 select-none">
-                      {item.image}
+                    <div className="h-14 w-14 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center select-none shrink-0 overflow-hidden">
+                      {item.image && (item.image.startsWith('http://') || item.image.startsWith('https://') || item.image.startsWith('data:image/') || item.image.includes('.') || item.image.includes('/')) ? (
+                        <img 
+                          src={item.image} 
+                          alt={item.title[lang]} 
+                          className="w-full h-full object-contain p-1"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <span className="text-3xl">{item.image}</span>
+                      )}
                     </div>
 
                     {/* Metadata summary copy */}

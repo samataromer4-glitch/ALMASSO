@@ -269,15 +269,26 @@ export default function App() {
         throw new Error("Blocked");
       }
     } catch (e) {
-      try {
-        navigator.clipboard.writeText(url);
-        showToast(
-          lang === 'so' 
-            ? "Url dukaanka ayaa la koobiyeeyay maadaama popup la xannibay!" 
-            : "WhatsApp link copied to clipboard (Popup was blocked)!",
-          'info'
-        );
-      } catch (clipError) {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(url)
+          .then(() => {
+            showToast(
+              lang === 'so' 
+                ? "Url dukaanka ayaa la koobiyeeyay maadaama popup la xannibay!" 
+                : "WhatsApp link copied to clipboard (Popup was blocked)!",
+              'info'
+            );
+          })
+          .catch((clipError) => {
+            console.warn("Clipboard blocked", clipError);
+            showToast(
+              lang === 'so' 
+                ? "Taleefankaaga/Browser-kaaga ayaa xannibay daaqada furan." 
+                : "Your secure browser has blocked opening the WhatsApp window.",
+              'info'
+            );
+          });
+      } else {
         showToast(
           lang === 'so' 
             ? "Taleefankaaga/Browser-kaaga ayaa xannibay daaqada furan." 
@@ -291,14 +302,17 @@ export default function App() {
   // WhatsApp individual product message formulation
   const handleWhatsAppProductOrder = (product: Product) => {
     const priceText = product.discountPrice !== null ? product.discountPrice : product.price;
-    const descText = 
-      `Asc Zaam Direct,\n` +
-      `Waxaan rabaa inaan si toos ah u dalbado alaabtan:\n` +
-      `- ${product.title[lang]}\n` +
-      `- Qiimaha: $${priceText.toFixed(2)}\n\n` +
-      `Fadlan ila soo xiriir si aan u dhamaystiro dhiibista dalka gudihiisa. Mahadsanid!`;
+    const origin = window.location.origin || '';
+    const productLink = `${origin}/?product=${product.id}`;
     
-    openUrlSafe(`https://wa.me/252634000000?text=${encodeURIComponent(descText)}`);
+    const descText = 
+      `🛍️ *DALAB ALAAB AH (PRODUCT ORDER)*\n` +
+      `----------------------------------------\n` +
+      `▪️ *Alaabta:* ${product.title[lang]}\n` +
+      `▪️ *Qiimaha:* $${priceText.toFixed(2)}\n` +
+      `▪️ *Link-ga:* ${productLink}`;
+    
+    openUrlSafe(`https://wa.me/252636270866?text=${encodeURIComponent(descText)}`);
   };
 
   const handleOrderCompleted = async (newOrder: Order) => {
@@ -572,8 +586,17 @@ export default function App() {
                 </div>
 
                 <div className="p-6 space-y-4">
-                  <div className="bg-slate-50 h-44 rounded-2xl flex items-center justify-center text-7xl select-none">
-                    {selectedProduct.image}
+                  <div className="bg-slate-50 h-56 rounded-2xl flex items-center justify-center select-none overflow-hidden border border-slate-100">
+                    {selectedProduct.image && (selectedProduct.image.startsWith('http://') || selectedProduct.image.startsWith('https://') || selectedProduct.image.startsWith('data:image/') || selectedProduct.image.includes('.') || selectedProduct.image.includes('/')) ? (
+                      <img 
+                        src={selectedProduct.image} 
+                        alt={selectedProduct.title[lang]} 
+                        className="w-full h-full object-contain p-3 bg-white"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="text-7xl">{selectedProduct.image}</span>
+                    )}
                   </div>
                   
                   <div className="space-y-1.5">

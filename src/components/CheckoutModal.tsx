@@ -37,6 +37,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [city, setCity] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [gatewaySelected, setGatewaySelected] = useState<'evc' | 'zaad' | 'sahal' | 'mpesa'>('zaad');
+  const [checkoutMethod, setCheckoutMethod] = useState<'whatsapp' | 'stk'>('whatsapp');
 
   // STK simulation sequence states
   const [stkStatus, setStkStatus] = useState<'idle' | 'push_sent' | 'processing' | 'success'>('idle');
@@ -47,7 +48,29 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     return acc + (finalPrice * item.quantity);
   }, 0);
 
-  // Trigger simulated STK push flow
+  // Generates a clean, professional, Somali formatted click-to-chat order invoice
+  const generateProfessionalWaText = (randomId: number, nameVal: string, phoneVal: string) => {
+    const origin = window.location.origin || '';
+    
+    // Construct simplified list of items showing only product, price, and link
+    const itemsBlock = cartItems.map((item) => {
+       const price = item.discountPrice !== null ? item.discountPrice : item.price;
+       const productLink = `${origin}/?product=${item.id}`;
+ 
+       return `🛍️ *Alaabta:* ${item.title[lang]} (x${item.quantity})\n` +
+              `💰 *Qiimaha:* $${price.toFixed(2)}\n` +
+              `🔗 *Link-ga:* ${productLink}`;
+    }).join('\n\n');
+ 
+    return `📦 *Dalab Cusub!*\n` +
+           `*Macmiilka:* ${nameVal}\n` +
+           `*Tel:* ${phoneVal}\n` +
+           `*Dalabka ID:* #${randomId}\n` +
+           `*Wadarta:* $${totalSum.toFixed(2)}\n\n` +
+           `${itemsBlock}`;
+  };
+
+  // Trigger simulated STK push flow or WhatsApp click-to-chat redirect
   const handleCheckoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !phoneNumber.trim() || !city.trim()) {
@@ -58,8 +81,43 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       return;
     }
 
-    // Trigger STK Sequence
-    setStkStatus('push_sent');
+    const randomId = Math.floor(1000 + Math.random() * 9000);
+    const orderId = 'ALM-' + randomId;
+
+    const orderProducts = cartItems.map(item => ({
+      productId: item.id,
+      title: item.title[lang],
+      quantity: item.quantity,
+      pricePaid: item.discountPrice !== null ? item.discountPrice : item.price,
+    }));
+
+    const newOrder: Order = {
+      id: orderId,
+      customerName: fullName,
+      phoneNumber: phoneNumber,
+      city: city,
+      neighborhood: neighborhood || "N/A",
+      paymentGateway: checkoutMethod === 'whatsapp' ? 'whatsapp' : gatewaySelected,
+      products: orderProducts,
+      totalAmount: totalSum,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+
+    if (checkoutMethod === 'whatsapp') {
+      // Append the order state to live DB so merchant knows about it
+      onOrderCompleted(newOrder);
+
+      // Construct WhatsApp clickable template as requested by customer
+      const waText = generateProfessionalWaText(randomId, fullName, phoneNumber);
+
+      // Redirect securely to +252636270866
+      openUrlSafe(`https://wa.me/252636270866?text=${encodeURIComponent(waText)}`);
+      onClose();
+    } else {
+      // Trigger simulated STK Sequence
+      setStkStatus('push_sent');
+    }
   };
 
   useEffect(() => {
@@ -104,20 +162,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   }, [stkStatus, countdown]);
 
   const handleWhatsAppRedirectAll = () => {
-    const itemsDescription = cartItems.map(item => `   - ${item.title[lang]} (x${item.quantity}) - $${((item.discountPrice || item.price) * item.quantity).toFixed(2)}`).join('\n');
-    const waText = 
-      `Asc Zaam, waxaan rabaa inaan si toos ah u dalbado alaabtan:\n\n` +
-      `${itemsDescription}\n\n` +
-      `*Macluumaadka Dhiibista:*\n` +
-      `- Macmiilka: ${fullName || 'Wax ka iibsade'}\n` +
-      `- Taleefanka: ${phoneNumber || 'N/A'}\n` +
-      `- Magaalada: ${city || 'N/A'}\n` +
-      `- Xaafadda: ${neighborhood || 'N/A'}\n` +
-      `- Isu-geyn: $${totalSum.toFixed(2)}\n` +
-      `- Gateway: ${gatewaySelected.toUpperCase()}\n\n` +
-      `Fadlan igu dhiib sida ugu dhakhsaha badan!`;
+    const randomId = Math.floor(1000 + Math.random() * 9000);
+    const waText = generateProfessionalWaText(randomId, fullName, phoneNumber);
 
-    openUrlSafe(`https://wa.me/252634000000?text=${encodeURIComponent(waText)}`);
+    openUrlSafe(`https://wa.me/252636270866?text=${encodeURIComponent(waText)}`);
   };
 
   return (
@@ -156,6 +204,34 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         {stkStatus === 'idle' && (
           <form onSubmit={handleCheckoutSubmit} className="p-6 space-y-4">
             
+            {/* Checkout Method Selector Tabs */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => setCheckoutMethod('whatsapp')}
+                className={`py-2 rounded-xl font-bold transition flex items-center justify-center gap-1.5 ${
+                  checkoutMethod === 'whatsapp'
+                    ? 'bg-white text-slate-950 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <MessageSquare size={14} className="text-emerald-600" />
+                <span>{lang === 'so' ? 'Ku Dalbo WhatsApp' : 'Order on WhatsApp'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCheckoutMethod('stk')}
+                className={`py-2 rounded-xl font-bold transition flex items-center justify-center gap-1.5 ${
+                  checkoutMethod === 'stk'
+                    ? 'bg-white text-slate-950 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Coins size={14} className="text-amber-500" />
+                <span>{lang === 'so' ? 'Mobile Money STK' : 'Mobile Money STK'}</span>
+              </button>
+            </div>
+
             {/* Input fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1">
@@ -209,63 +285,81 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
 
             {/* Gateway choices */}
-            <div className="space-y-2 pt-1">
-              <label className="font-extrabold text-slate-500 block">{t.paymentGateway}</label>
-              <div className="grid grid-cols-2 gap-2.5">
-                {[
-                  { id: 'zaad', name: 'ZAAD Service', desc: 'Somaliland (Telesom)' },
-                  { id: 'evc', name: 'EVC Plus', desc: 'Central/South (Hormuud)' },
-                  { id: 'sahal', name: 'Sahal', desc: 'Puntland (Golis)' },
-                  { id: 'mpesa', name: 'M-Pesa Pay', desc: 'Kenya (Safaricom)' },
-                ].map((gate) => (
-                  <button
-                    key={gate.id}
-                    type="button"
-                    onClick={() => setGatewaySelected(gate.id as any)}
-                    className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center transition-all duration-200 ${
-                      gatewaySelected === gate.id
-                        ? 'border-amber-500 bg-amber-50/20 shadow-sm ring-1 ring-amber-500'
-                        : 'border-slate-150 bg-slate-50 hover:bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <span className="font-black text-slate-900 text-xs">{gate.name}</span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-0.5">{gate.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            {checkoutMethod === 'stk' && (
+              <div className="space-y-4">
+                <div className="space-y-2 pt-1 animate-scale-up">
+                  <label className="font-extrabold text-slate-500 block">{t.paymentGateway}</label>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {[
+                      { id: 'zaad', name: 'ZAAD Service', desc: 'Somaliland (Telesom)' },
+                      { id: 'evc', name: 'EVC Plus', desc: 'Central/South (Hormuud)' },
+                      { id: 'sahal', name: 'Sahal', desc: 'Puntland (Golis)' },
+                      { id: 'mpesa', name: 'M-Pesa Pay', desc: 'Kenya (Safaricom)' },
+                    ].map((gate) => (
+                      <button
+                        key={gate.id}
+                        type="button"
+                        onClick={() => setGatewaySelected(gate.id as any)}
+                        className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center transition-all duration-200 ${
+                          gatewaySelected === gate.id
+                            ? 'border-amber-500 bg-amber-50/20 shadow-sm ring-1 ring-amber-500'
+                            : 'border-slate-150 bg-slate-50 hover:bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        <span className="font-black text-slate-900 text-xs">{gate.name}</span>
+                        <span className="text-[9px] text-slate-400 font-bold mt-0.5">{gate.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Hint Box informational */}
-            <div className="bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-2xl flex gap-2.5 items-start">
-              <span className="text-base select-none">💡</span>
-              <p className="text-[10px] text-amber-900 font-bold leading-relaxed">
-                {t.paymentGatewayDesc}
-              </p>
-            </div>
+                {/* Hint Box informational */}
+                <div className="bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-2xl flex gap-2.5 items-start animate-scale-up">
+                  <span className="text-base select-none">💡</span>
+                  <p className="text-[10px] text-amber-900 font-bold leading-relaxed">
+                    {t.paymentGatewayDesc}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Large checkout actions row */}
-            <div className="pt-3 flex flex-col sm:flex-row gap-2.5">
-              {/* Fallback secondary checkout over WhatsApp as prioritized in spec */}
-              <button
-                type="button"
-                onClick={handleWhatsAppRedirectAll}
-                className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-black py-3 rounded-2xl transition flex items-center justify-center gap-1.5"
-                id="checkout-wa-fallback-btn"
-              >
-                <MessageSquare size={13} />
-                <span>{lang === 'so' ? 'Ku dalbo WhatsApp' : 'Submit on WhatsApp'}</span>
-              </button>
+            <div className="pt-3">
+              {checkoutMethod === 'whatsapp' ? (
+                <button
+                  type="submit"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm"
+                  id="checkout-confirm-whatsapp-btn"
+                >
+                  <MessageSquare size={16} />
+                  <span>{lang === 'so' ? 'Dalbo Gacanta (Order Now)' : 'Order Now'}</span>
+                  <ArrowRight size={14} />
+                </button>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  {/* Fallback secondary checkout over WhatsApp as prioritized in spec */}
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppRedirectAll}
+                    className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-black py-3 rounded-2xl transition flex items-center justify-center gap-1.5"
+                    id="checkout-wa-fallback-btn"
+                  >
+                    <MessageSquare size={13} />
+                    <span>{lang === 'so' ? 'Ku dalbo WhatsApp' : 'Submit on WhatsApp'}</span>
+                  </button>
 
-              <button
-                type="submit"
-                className="flex-1 bg-slate-950 hover:bg-amber-400 hover:text-slate-950 text-white font-black py-3 rounded-2xl shadow-lg transition-all"
-                id="checkout-confirm-stk-btn"
-              >
-                <span className="flex items-center justify-center gap-1">
-                  <span>{t.completeOrder}</span>
-                  <ArrowRight size={13} />
-                </span>
-              </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-slate-950 hover:bg-amber-400 hover:text-slate-950 text-white font-black py-3 rounded-2xl shadow-lg transition-all"
+                    id="checkout-confirm-stk-btn"
+                  >
+                    <span className="flex items-center justify-center gap-1">
+                      <span>{t.completeOrder}</span>
+                      <ArrowRight size={13} />
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
           </form>
         )}

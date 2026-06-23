@@ -65,7 +65,7 @@ export const CustomerHero: React.FC<CustomerHeroProps> = ({ lang }) => {
         {/* Action Button Link for WhatsApp */}
         <div className="pt-2">
           <a
-            href="https://wa.me/252634000000"
+            href="https://wa.me/252636270866"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold px-6 py-2.8 rounded-xl shadow-lg shadow-emerald-900/20 transition-all duration-200"

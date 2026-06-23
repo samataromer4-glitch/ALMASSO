@@ -51,15 +51,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Interactive Illustration representation */}
       <div 
         onClick={() => onViewDetails(product)}
-        className="bg-slate-50 relative aspect-square w-full flex items-center justify-center text-6xl select-none group-hover:scale-102 transition-transform duration-350 cursor-pointer"
+        className="bg-slate-50 border-b border-slate-100 relative aspect-square w-full flex items-center justify-center select-none group-hover:scale-102 transition-transform duration-350 cursor-pointer overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 z-10">
           <span className="bg-white text-slate-900 p-2 text-xs rounded-full shadow-lg font-bold flex items-center gap-1 scale-90 group-hover:scale-100 transition-all duration-300">
             <Eye size={14} />
             <span>{lang === 'so' ? 'Eeg' : 'View'}</span>
           </span>
         </div>
-        {product.image}
+        
+        {product.image && (product.image.startsWith('http://') || product.image.startsWith('https://') || product.image.startsWith('data:image/') || product.image.includes('.') || product.image.includes('/')) ? (
+          <img 
+            src={product.image} 
+            alt={product.title[lang]} 
+            className="w-full h-full object-contain p-2 bg-white"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <span className="text-6xl">{product.image}</span>
+        )}
       </div>
 
       {/* Text Copy Description info */}
