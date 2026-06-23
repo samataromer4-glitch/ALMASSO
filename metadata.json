@@ -1,0 +1,6 @@
+{
+  "name": "Almasso",
+  "description": "A minimalist, high-conversion single-vendor e-commerce platform tailored for the Horn of Africa, featuring instant search, mobile money STK simulation, WhatsApp orders, and a hidden secure management dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
