@@ -106,7 +106,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const handleWhatsAppRedirectAll = () => {
     const itemsDescription = cartItems.map(item => `   - ${item.title[lang]} (x${item.quantity}) - $${((item.discountPrice || item.price) * item.quantity).toFixed(2)}`).join('\n');
     const waText = 
-      `Asc Almasso, waxaan rabaa inaan si toos ah u dalbado alaabtan:\n\n` +
+      `Asc Zaam, waxaan rabaa inaan si toos ah u dalbado alaabtan:\n\n` +
       `${itemsDescription}\n\n` +
       `*Macluumaadka Dhiibista:*\n` +
       `- Macmiilka: ${fullName || 'Wax ka iibsade'}\n` +

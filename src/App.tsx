@@ -292,7 +292,7 @@ export default function App() {
   const handleWhatsAppProductOrder = (product: Product) => {
     const priceText = product.discountPrice !== null ? product.discountPrice : product.price;
     const descText = 
-      `Asc Almasso Direct,\n` +
+      `Asc Zaam Direct,\n` +
       `Waxaan rabaa inaan si toos ah u dalbado alaabtan:\n` +
       `- ${product.title[lang]}\n` +
       `- Qiimaha: $${priceText.toFixed(2)}\n\n` +
@@ -496,7 +496,7 @@ export default function App() {
                 <span className="text-white font-black">{lang === 'so' ? 'Koontada Mulkiilaha' : 'Administrator Area'}</span>
                 <p className="text-slate-450 leading-relaxed">
                   {lang === 'so' 
-                    ? "Haddii aad tahay mulkiilaha saxda ah ee dukaanka, ku dhufo badhanka hoose si aad u maamusho alaabta yaala Almasso."
+                    ? "Haddii aad tahay mulkiilaha saxda ah ee dukaanka, ku dhufo badhanka hoose si aad u maamusho alaabta yaala Zaam."
                     : "Private merchant administrative console. Log in here to review invoices and publish real-time catalog items."}
                 </p>
                 
@@ -517,7 +517,7 @@ export default function App() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-slate-800 text-center font-medium">
-              <p>© 2026 Almasso Single-Vendor Retailer. Handcrafted with Alaabso-style layouts.</p>
+              <p>© 2026 Zaam Single-Vendor Retailer. Handcrafted with Alaabso-style layouts.</p>
             </div>
           </footer>
 

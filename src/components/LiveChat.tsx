@@ -21,8 +21,8 @@ export const LiveChat: React.FC<LiveChatProps> = ({ lang }) => {
       id: 'm-1',
       sender: 'owner',
       text: lang === 'so' 
-        ? "Asc! Soo dhowow. Waxaan nahay Almasso. Sideen maanta kuu caawin karnaa? (Ku qor meelaha aad joogto sida Hargeisa ama Muqdisho si aan kuu siino macluumaadka dhiibista)"
-        : "Asc! Welcome to Almasso Direct Shopping support. How can we help you today? Leave us a message or ask about cities (Hargeisa, Mogadishu) for instant delivery answers.",
+        ? "Asc! Soo dhowow. Waxaan nahay Zaam. Sideen maanta kuu caawin karnaa? (Ku qor meelaha aad joogto sida Hargeisa ama Muqdisho si aan kuu siino macluumaadka dhiibista)"
+        : "Asc! Welcome to Zaam Direct Shopping support. How can we help you today? Leave us a message or ask about cities (Hargeisa, Mogadishu) for instant delivery answers.",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
   ]);

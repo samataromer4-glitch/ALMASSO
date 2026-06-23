@@ -165,12 +165,12 @@ export const INITIAL_ORDERS: Order[] = [
 export const TRANSLATIONS = {
   so: {
     // Layout
-    brand: "Almasso",
+    brand: "Zaam",
     subBrand: "Dukaan Toos ah",
     headerMuted: "Nidaamka rasmiga ee Alaabso-Style",
     customerMode: "Ku laabo Dukaanka",
     ownerPortal: "Gali Maamulka (Owner Login)",
-    ownerPortalHeader: "Almasso Core Engine",
+    ownerPortalHeader: "Zaam Core Engine",
     changeLang: "English",
     
     // Front page
@@ -218,7 +218,7 @@ export const TRANSLATIONS = {
     close: "Xidh fariinta",
     
     // Admin Login Screen
-    adminLoginTitle: "Maamulka Qarsoon ee Almasso",
+    adminLoginTitle: "Maamulka Qarsoon ee Zaam",
     adminLoginDesc: "Goobtan waxaa geli kara oo keliya mulkiilaha dukaanka si uu u maamulo alaabta yaala iyo dalabaadka.",
     passcodeLabel: "Geli Passcode-ka Maamulka",
     passcodePlace: "Geli sirta...",
@@ -230,7 +230,7 @@ export const TRANSLATIONS = {
     revenueCard: "Wadar Iibka ($)",
     pendingOrdersCard: "Dalabyada Cusub",
     inventoryCard: "Shayada Dukaanka",
-    analyticsTitle: "Xogta Dukaanka Almasso",
+    analyticsTitle: "Xogta Dukaanka Zaam",
     addProdBtn: "Soo Geli Alaab Cusub",
     editProdBtn: "Cusboonaysii Alaabta",
     ordersSection: "Dalabaadka Macaamiisha",
@@ -265,12 +265,12 @@ export const TRANSLATIONS = {
   },
   en: {
     // Layout
-    brand: "Almasso",
+    brand: "Zaam",
     subBrand: "Direct Store",
     headerMuted: "Official Alaabso-Style Gateway",
     customerMode: "Back to Public Catalog",
     ownerPortal: "Gali Maamulka (Owner Login)",
-    ownerPortalHeader: "Almasso Core Engine",
+    ownerPortalHeader: "Zaam Core Engine",
     changeLang: "Somali",
     
     // Front page
@@ -306,7 +306,7 @@ export const TRANSLATIONS = {
     neighborhood: "Neighborhood & House details",
     neighborhoodPlace: "e.g. Jigjiga Yar, Hodan, Koodbuur",
     paymentGateway: "Local Mobile Money Network",
-    paymentGatewayDesc: "The Almasso engine will seamlessly push a banking dialog directly to your phone for confirmation.",
+    paymentGatewayDesc: "The Zaam engine will seamlessly push a banking dialog directly to your phone for confirmation.",
     waFallbackPay: "Alternative: You can finalize and make dynamic query purchases with the owner on WhatsApp.",
     completeOrder: "Authorize & Confirm Payment",
     
