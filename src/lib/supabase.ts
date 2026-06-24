@@ -22,8 +22,8 @@ export const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey)
  * DB Table Schemas definition for Supabase SQL Editor.
  * Copy and run this inside your Supabase dashboard > SQL Editor to initialize.
  */
-export const SUPABASE_SQL_CREATION = `-- 1. Create almasso_products Table
-CREATE TABLE IF NOT EXISTS almasso_products (
+export const SUPABASE_SQL_CREATION = `-- 1. Create maash_products Table
+CREATE TABLE IF NOT EXISTS maash_products (
   id TEXT PRIMARY KEY,
   category TEXT NOT NULL,
   title JSONB NOT NULL,
@@ -38,13 +38,13 @@ CREATE TABLE IF NOT EXISTS almasso_products (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Enable RLS and setup policies for almasso_products
-ALTER TABLE almasso_products ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read - Products" ON almasso_products FOR SELECT USING (true);
-CREATE POLICY "Allow public write - Products" ON almasso_products FOR ALL USING (true);
+-- Enable RLS and setup policies for maash_products
+ALTER TABLE maash_products ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read - Products" ON maash_products FOR SELECT USING (true);
+CREATE POLICY "Allow public write - Products" ON maash_products FOR ALL USING (true);
 
--- 2. Create almasso_orders Table
-CREATE TABLE IF NOT EXISTS almasso_orders (
+-- 2. Create maash_orders Table
+CREATE TABLE IF NOT EXISTS maash_orders (
   id TEXT PRIMARY KEY,
   customer_name TEXT NOT NULL,
   phone_number TEXT NOT NULL,
@@ -57,11 +57,11 @@ CREATE TABLE IF NOT EXISTS almasso_orders (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Enable RLS and setup policies for almasso_orders
-ALTER TABLE almasso_orders ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read - Orders" ON almasso_orders FOR SELECT USING (true);
-CREATE POLICY "Allow public insert - Orders" ON almasso_orders FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public write - Orders" ON almasso_orders FOR ALL USING (true);`;
+-- Enable RLS and setup policies for maash_orders
+ALTER TABLE maash_orders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read - Orders" ON maash_orders FOR SELECT USING (true);
+CREATE POLICY "Allow public insert - Orders" ON maash_orders FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public write - Orders" ON maash_orders FOR ALL USING (true);`;
 
 // Map Product (TypeScript Model) => Postgres Table Row
 export function mapProductToDb(p: Product) {

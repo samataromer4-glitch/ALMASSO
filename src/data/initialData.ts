@@ -7,83 +7,84 @@ import { Category, Product, Order } from '../types';
 
 export const CATEGORIES: Category[] = [
   { id: 'all', name: { so: 'Dhammaan Alaabta', en: 'All Products' }, icon: '✨' },
-  { id: 'electronics', name: { so: 'Elektaroonigga & Tech-ga', en: 'Tech & Electronics' }, icon: '💻' },
-  { id: 'fashion', name: { so: 'Dharka Luxury & Diracda', en: 'Dirac & Luxury Fashion' }, icon: '👗' },
-  { id: 'oils', name: { so: 'Saliidaha & Cadarrada', en: 'Oils & Fragrances' }, icon: '🏺' },
-  { id: 'home', name: { so: 'Agabka Aqalka & Qurxinta', en: 'Home Living & Styling' }, icon: '🏠' }
+  { id: 'plumbing', name: { so: 'Qalabka Biyaha', en: 'Plumbing & Water Equipment' }, icon: '🚰' },
+  { id: 'steel', name: { so: 'Stealka', en: 'Steel & Metalware' }, icon: '🏗️' },
+  { id: 'building', name: { so: 'Building Materials', en: 'Building Materials' }, icon: '🧱' },
+  { id: 'tools', name: { so: 'Tools', en: 'Tools & Hardware' }, icon: '🛠️' },
+  { id: 'electronics', name: { so: 'Electronic-ga', en: 'Electronics & Devices' }, icon: '🔌' }
 ];
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
     id: 'p-1',
-    category: 'electronics',
+    category: 'plumbing',
     title: {
-      so: "Kumbuyuutar Apple MacBook Pro M3 (8GB/512GB SSD)",
-      en: "Apple MacBook Pro M3 Laptop (8GB RAM / 512GB SSD)"
+      so: "Tuubbooyinka Biyaha PPR High-Pressure (1 Inch)",
+      en: "PPR High-Pressure Water Pipes (1 Inch - Pack of 10)"
     },
-    price: 1450.00,
-    discountPrice: 1399.00,
-    image: "💻",
+    price: 24.00,
+    discountPrice: 20.00,
+    image: "🚰",
     description: {
-      so: "Kumbuyuutar Apple MacBook Pro M3 aad u dheereeya. Ku haboon shaqada, waxbarashada, iyo naqshadaynta. Alaab damaanad leh.",
-      en: "Supercharged Apple MacBook Pro M3 laptop. Perfect for demanding workflows, engineering, and digital creative design."
+      so: "Tuubbooyin PPR tayo sare leh oo loogu talagalay biyo-galinta guryaha iyo dhismayaasha. Waxay u adkaysan karaan cadaadis xoogan.",
+      en: "Premium durable PPR piping solution for hot and cold residential water distribution systems."
     },
-    stock: 5,
-    rating: 4.9,
+    stock: 25,
+    rating: 4.8,
     reviewsCount: 34,
     isFlash: true
   },
   {
     id: 'p-2',
-    category: 'fashion',
+    category: 'steel',
     title: {
-      so: "Dirac Shabaax Xariir ah oo Koyto Premium ah",
-      en: "Premium Traditional Somali Shabaax Silk Dirac Set"
+      so: "Biinanka Birta ee Dhismaha (Grade 60 Steel Rebars - 12mm)",
+      en: "High-Strength Steel Rebars for Construction (12mm - Ton)"
     },
-    price: 125.00,
-    discountPrice: 110.00,
-    image: "👗",
+    price: 850.00,
+    discountPrice: 810.00,
+    image: "🏗️",
     description: {
-      so: "Dirac Shabaax oo xariir saafi ah, oo lagu qurxiyey daabacado dahabi ah oo indhaha soo jiidaya. Aad ugu haboon aroosyada iyo xafladaha.",
-      en: "Exquisite traditional Somali Shabaax Dirac made from premium royal silk with bespoke gold metallic embroidery. Perfect for prestige occasions."
+      so: "Biraha stealka adag ee loo isticmaalo shubka iyo dhismaha derbiyada adag. Shahaado caalami ah leh.",
+      en: "Industry-standard structural grade-60 carbon steel reinforcing bars. Perfect for masonry, foundations, and robust columns."
     },
     stock: 8,
-    rating: 4.8,
+    rating: 4.9,
     reviewsCount: 19,
     isFlash: true
   },
   {
     id: 'p-3',
-    category: 'oils',
+    category: 'building',
     title: {
-      so: "Saliid Macsaro Saafi ah (1 Litre - Cold Pressed)",
-      en: "100% Organic Sesame Oil (1L - Cold Pressed)"
+      so: "Shamiinto Premium Portland Cement (50Kg)",
+      en: "Premium Grade Portland Cement (50Kg Bag)"
     },
-    price: 18.00,
-    discountPrice: 15.00,
-    image: "🏺",
+    price: 9.50,
+    discountPrice: 8.50,
+    image: "🧱",
     description: {
-      so: "Saliid macsaro dabiici ah oo laga miiray beeraha dalka. Aad u caafimaad badan, ku haboon cuntada iyo jidka.",
-      en: "Pure cold-pressed organic sesame oil directly harvested from regional farms. Nutrient-dense, versatile, and 100% natural."
+      so: "Shamiinto tayo sare leh oo si degdeg ah u qalasha isla markaana adkaynaysa shubka iyo guryaha dhismahooda.",
+      en: "High-performance cement formula suitable for all general concrete, mortar, plastering, and bricklaying projects."
     },
-    stock: 45,
+    stock: 120,
     rating: 4.7,
     reviewsCount: 112,
     isFlash: false
   },
   {
     id: 'p-4',
-    category: 'electronics',
+    category: 'tools',
     title: {
-      so: "Samaacadaha Bilaa Xadhiga ah ee Smart Pods Pro II",
-      en: "Smart Pods Pro II Wireless Active ANC Earphones"
+      so: "Driilka Bilaa Xadhiga ah ee DeWalt 20V Max Cordless Drill",
+      en: "DeWalt 20V Max Cordless Drill with Battery Pack"
     },
-    price: 65.00,
-    discountPrice: null,
-    image: "🎧",
+    price: 120.00,
+    discountPrice: 99.00,
+    image: "🛠️",
     description: {
-      so: "Samaacado dhegaha ah oo aad u cod macaan, lehna xakamaynta dhawaqa dibadda (ANC) iyo batari waara dhowr maalmood.",
-      en: "Pro-fidelity wireless sound pods featuring active noise cancellation, deep acoustic bass, and extended high-capacity battery life."
+      so: "Driil awood badan oo shaqo kasta ku fududaynaya. Waxaa la socda baytari dhowr saacadood shaqaynaya iyo boorso qaadis ah.",
+      en: "Heavy-duty cordless compact drill driver kit featuring variable speeds, ergonomics, and high-capacity battery."
     },
     stock: 15,
     rating: 4.5,
@@ -92,17 +93,17 @@ export const INITIAL_PRODUCTS: Product[] = [
   },
   {
     id: 'p-5',
-    category: 'home',
+    category: 'electronics',
     title: {
-      so: "Dambas Carfiso Smart USB oo leh Nalal Nuuraya",
-      en: "Smart USB Essential Oil Aromatherapy Diffuser"
+      so: "Qalabka Cabbiraada Korontada ee Digital Multimeter Pro",
+      en: "Professional Digital Multimeter & Electrical Tester"
     },
-    price: 35.00,
-    discountPrice: 28.00,
-    image: "🏺",
+    price: 45.00,
+    discountPrice: null,
+    image: "🔌",
     description: {
-      so: "Dambas carfiso oo casri ah oo ku shaqaysa USB. Waxay u qurxinaysaa aqalkaaga qaab ambient ah oo indho-qabad leh.",
-      en: "Aesthetic ultrasonic essential oil mist humidifier with multi-color ambient lighting and quiet continuous scheduling."
+      so: "Qalabka cabbiraada danabka, caabbiga, iyo qulqulka korontada ee digital-ka ah. Aad ugu fiican farsamayaqaanka korontada.",
+      en: "High-accuracy digital testing meter for measuring voltage, resistance, current, and continuous connectivity."
     },
     stock: 12,
     rating: 4.6,
@@ -111,17 +112,17 @@ export const INITIAL_PRODUCTS: Product[] = [
   },
   {
     id: 'p-6',
-    category: 'fashion',
+    category: 'plumbing',
     title: {
-      so: "Khamiis Carabi Premium ah (Al-Aseel Design)",
-      en: "Bespoke Arabic Thobe - Premium Al-Aseel Fit"
+      so: "Mashiinka Biyaha Riixaya ee Honda High-Flow Water Pump",
+      en: "Honda High-Flow Electric Water Pump (2HP)"
     },
-    price: 45.00,
-    discountPrice: 38.00,
-    image: "👕",
+    price: 320.00,
+    discountPrice: 299.00,
+    image: "💧",
     description: {
-      so: "Khamiis cad oo aad u qurux badan, oo laga tolay cudbi tayo sare leh. Ku haboon ciidaha iyo salaadaha dalka.",
-      en: "Tailored luxury white Arabic thobe sewn with premium breathable linen-cotton. Designed for religious prayers and holiday celebrations."
+      so: "Mashiin awood sare leh oo biyo dhoofinta iyo kor u soo jiidista guryaha u fududaynaya. Buuq yar oo tamar badbaadinaya.",
+      en: "Powerful multi-purpose centrifugal pump for residential high-pressure flow and agricultural irrigation."
     },
     stock: 20,
     rating: 4.8,
@@ -165,12 +166,12 @@ export const INITIAL_ORDERS: Order[] = [
 export const TRANSLATIONS = {
   so: {
     // Layout
-    brand: "Zaam",
+    brand: "MAASH",
     subBrand: "Dukaan Toos ah",
     headerMuted: "Nidaamka rasmiga ee Alaabso-Style",
     customerMode: "Ku laabo Dukaanka",
     ownerPortal: "Gali Maamulka (Owner Login)",
-    ownerPortalHeader: "Zaam Core Engine",
+    ownerPortalHeader: "MAASH Core Engine",
     changeLang: "English",
     
     // Front page
@@ -218,7 +219,7 @@ export const TRANSLATIONS = {
     close: "Xidh fariinta",
     
     // Admin Login Screen
-    adminLoginTitle: "Maamulka Qarsoon ee Zaam",
+    adminLoginTitle: "Maamulka Qarsoon ee MAASH",
     adminLoginDesc: "Goobtan waxaa geli kara oo keliya mulkiilaha dukaanka si uu u maamulo alaabta yaala iyo dalabaadka.",
     passcodeLabel: "Geli Passcode-ka Maamulka",
     passcodePlace: "Geli sirta...",
@@ -230,7 +231,7 @@ export const TRANSLATIONS = {
     revenueCard: "Wadar Iibka ($)",
     pendingOrdersCard: "Dalabyada Cusub",
     inventoryCard: "Shayada Dukaanka",
-    analyticsTitle: "Xogta Dukaanka Zaam",
+    analyticsTitle: "Xogta Dukaanka MAASH",
     addProdBtn: "Soo Geli Alaab Cusub",
     editProdBtn: "Cusboonaysii Alaabta",
     ordersSection: "Dalabaadka Macaamiisha",
@@ -265,12 +266,12 @@ export const TRANSLATIONS = {
   },
   en: {
     // Layout
-    brand: "Zaam",
+    brand: "MAASH",
     subBrand: "Direct Store",
     headerMuted: "Official Alaabso-Style Gateway",
     customerMode: "Back to Public Catalog",
     ownerPortal: "Gali Maamulka (Owner Login)",
-    ownerPortalHeader: "Zaam Core Engine",
+    ownerPortalHeader: "MAASH Core Engine",
     changeLang: "Somali",
     
     // Front page
@@ -306,7 +307,7 @@ export const TRANSLATIONS = {
     neighborhood: "Neighborhood & House details",
     neighborhoodPlace: "e.g. Jigjiga Yar, Hodan, Koodbuur",
     paymentGateway: "Local Mobile Money Network",
-    paymentGatewayDesc: "The Zaam engine will seamlessly push a banking dialog directly to your phone for confirmation.",
+    paymentGatewayDesc: "The MAASH engine will seamlessly push a banking dialog directly to your phone for confirmation.",
     waFallbackPay: "Alternative: You can finalize and make dynamic query purchases with the owner on WhatsApp.",
     completeOrder: "Authorize & Confirm Payment",
     

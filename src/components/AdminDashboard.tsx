@@ -60,7 +60,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Form fields
   const [titleSo, setTitleSo] = useState('');
   const [titleEn, setTitleEn] = useState('');
-  const [category, setCategory] = useState('electronics');
+  const [category, setCategory] = useState('plumbing');
   const [price, setPrice] = useState('');
   const [discountPrice, setDiscountPrice] = useState('');
   const [imageEmoji, setImageEmoji] = useState('📦');
@@ -114,7 +114,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditingProduct(null);
     setTitleSo('');
     setTitleEn('');
-    setCategory('electronics');
+    setCategory('plumbing');
     setPrice('');
     setDiscountPrice('');
     setImageEmoji('📦');

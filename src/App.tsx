@@ -13,7 +13,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { LiveChat } from './components/LiveChat';
 
 import { Product, CartItem, Order, Language } from './types';
-import { INITIAL_PRODUCTS, INITIAL_ORDERS, TRANSLATIONS } from './data/initialData';
+import { INITIAL_PRODUCTS, INITIAL_ORDERS, TRANSLATIONS, CATEGORIES } from './data/initialData';
 import { Lock, ShoppingCart, Info, Check, Sparkles, X, Phone, ShoppingBag } from 'lucide-react';
 import { supabase, mapProductToDb, mapProductFromDb, mapOrderToDb, mapOrderFromDb } from './lib/supabase';
 
@@ -24,8 +24,18 @@ export default function App() {
   // Load state from LocalStorage so CRUD edits and Order records persist beautifully
   const [products, setProducts] = useState<Product[]>(() => {
     try {
-      const saved = localStorage.getItem('almasso_products');
-      return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+      const saved = localStorage.getItem('maash_products');
+      if (saved) {
+        const parsed = JSON.parse(saved) as Product[];
+        const validCategoryIds = new Set(CATEGORIES.map(c => c.id));
+        const hasObsolete = parsed.some(p => !validCategoryIds.has(p.category));
+        if (hasObsolete) {
+          localStorage.setItem('maash_products', JSON.stringify(INITIAL_PRODUCTS));
+          return INITIAL_PRODUCTS;
+        }
+        return parsed;
+      }
+      return INITIAL_PRODUCTS;
     } catch (e) {
       console.warn("Storage access restricted. State will remain in memory.", e);
       return INITIAL_PRODUCTS;
@@ -34,7 +44,7 @@ export default function App() {
 
   const [orders, setOrders] = useState<Order[]>(() => {
     try {
-      const saved = localStorage.getItem('almasso_orders');
+      const saved = localStorage.getItem('maash_orders');
       return saved ? JSON.parse(saved) : INITIAL_ORDERS;
     } catch (e) {
       return INITIAL_ORDERS;
@@ -43,7 +53,7 @@ export default function App() {
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
-      const saved = localStorage.getItem('almasso_cart');
+      const saved = localStorage.getItem('maash_cart');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -74,7 +84,7 @@ export default function App() {
       
       // 1. Fetch products
       const { data: dbProducts, error: prodError } = await supabase
-        .from('almasso_products')
+        .from('maash_products')
         .select('*')
         .order('id', { ascending: true });
       
@@ -84,7 +94,7 @@ export default function App() {
 
       // 2. Fetch orders
       const { data: dbOrders, error: orderError } = await supabase
-        .from('almasso_orders')
+        .from('maash_orders')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -100,7 +110,7 @@ export default function App() {
         // If connected successfully but database is completely empty (initial setup),
         // let's bootstrap it by inserting INITIAL_PRODUCTS so the user has beautiful instant items!
         const rows = INITIAL_PRODUCTS.map(mapProductToDb);
-        const { error: seedError } = await supabase.from('almasso_products').insert(rows);
+        const { error: seedError } = await supabase.from('maash_products').insert(rows);
         if (seedError) {
           console.warn("Bootstrap seed products failed", seedError);
         } else {
@@ -136,7 +146,7 @@ export default function App() {
     try {
       if (action === 'delete') {
         const { error } = await supabase
-          .from('almasso_products')
+          .from('maash_products')
           .delete()
           .eq('id', product.id);
         if (error) throw error;
@@ -144,7 +154,7 @@ export default function App() {
         // add or update (uses upsert)
         const row = mapProductToDb(product);
         const { error } = await supabase
-          .from('almasso_products')
+          .from('maash_products')
           .upsert(row);
         if (error) throw error;
       }
@@ -167,7 +177,7 @@ export default function App() {
 
     try {
       const { error } = await supabase
-        .from('almasso_orders')
+        .from('maash_orders')
         .update({ status: nextStatus })
         .eq('id', orderId);
       if (error) throw error;
@@ -194,7 +204,7 @@ export default function App() {
   // Synchronizers
   useEffect(() => {
     try {
-      localStorage.setItem('almasso_products', JSON.stringify(products));
+      localStorage.setItem('maash_products', JSON.stringify(products));
     } catch (e) {
       // ignore
     }
@@ -202,7 +212,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('almasso_orders', JSON.stringify(orders));
+      localStorage.setItem('maash_orders', JSON.stringify(orders));
     } catch (e) {
       // ignore
     }
@@ -210,7 +220,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('almasso_cart', JSON.stringify(cart));
+      localStorage.setItem('maash_cart', JSON.stringify(cart));
     } catch (e) {
       // ignore
     }
@@ -348,7 +358,7 @@ export default function App() {
     if (isDbConnected === 'connected') {
       try {
         const { error: orderError } = await supabase
-          .from('almasso_orders')
+          .from('maash_orders')
           .insert(mapOrderToDb(newOrder));
         
         if (orderError) throw orderError;
@@ -358,7 +368,7 @@ export default function App() {
           const matchedProd = updatedProducts.find(p => p.id === item.id);
           if (matchedProd) {
             await supabase
-              .from('almasso_products')
+              .from('maash_products')
               .update({ stock: matchedProd.stock })
               .eq('id', matchedProd.id);
           }
@@ -510,7 +520,7 @@ export default function App() {
                 <span className="text-white font-black">{lang === 'so' ? 'Koontada Mulkiilaha' : 'Administrator Area'}</span>
                 <p className="text-slate-450 leading-relaxed">
                   {lang === 'so' 
-                    ? "Haddii aad tahay mulkiilaha saxda ah ee dukaanka, ku dhufo badhanka hoose si aad u maamusho alaabta yaala Zaam."
+                    ? "Haddii aad tahay mulkiilaha saxda ah ee dukaanka, ku dhufo badhanka hoose si aad u maamusho alaabta yaala MAASH."
                     : "Private merchant administrative console. Log in here to review invoices and publish real-time catalog items."}
                 </p>
                 
@@ -531,7 +541,7 @@ export default function App() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-slate-800 text-center font-medium">
-              <p>© 2026 Zaam Single-Vendor Retailer. Handcrafted with Alaabso-style layouts.</p>
+              <p>© 2026 MAASH Single-Vendor Retailer. Handcrafted with Alaabso-style layouts.</p>
             </div>
           </footer>
 
