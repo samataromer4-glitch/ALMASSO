@@ -11,6 +11,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LiveChat } from './components/LiveChat';
+import { Logo } from './components/Logo';
 
 import { Product, CartItem, Order, Language } from './types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, TRANSLATIONS, CATEGORIES } from './data/initialData';
@@ -39,6 +40,35 @@ export default function App() {
         if (hasObsolete) {
           localStorage.setItem('maash_products', JSON.stringify(INITIAL_PRODUCTS));
           return INITIAL_PRODUCTS;
+        }
+        // Merge any new products from INITIAL_PRODUCTS that are not yet in local storage (e.g. p-7 to p-12)
+        const existingIds = new Set(parsed.map(p => p.id));
+        const newProductsToAdd = INITIAL_PRODUCTS.filter(ip => !existingIds.has(ip.id));
+        let updatedList = [...parsed];
+        let migrated = false;
+        if (newProductsToAdd.length > 0) {
+          updatedList = [...updatedList, ...newProductsToAdd];
+          migrated = true;
+        }
+
+        // Migrate old emoji images to brand new high quality images
+        const updated = updatedList.map(p => {
+          const matchInitial = INITIAL_PRODUCTS.find(ip => ip.id === p.id);
+          if (matchInitial && (p.image === '🚰' || p.image === '🏗️' || p.image === '🧱' || p.image === '🛠️' || p.image === '🔌' || p.image === '💧')) {
+            migrated = true;
+            return { ...p, image: matchInitial.image };
+          }
+          // Also set high-quality image if the product currently has a placeholder or empty string
+          if (matchInitial && (!p.image || p.image === '📦')) {
+            migrated = true;
+            return { ...p, image: matchInitial.image };
+          }
+          return p;
+        });
+
+        if (migrated) {
+          localStorage.setItem('maash_products', JSON.stringify(updated));
+          return updated;
         }
         return parsed;
       }
@@ -509,10 +539,7 @@ export default function App() {
               
               <div className="space-y-3.5">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center font-black text-lg">
-                    A
-                  </div>
-                  <span className="text-white font-black text-sm">{t.brand}</span>
+                  <Logo size="sm" variant="light" />
                 </div>
                 <p className="leading-relaxed font-medium">
                   {lang === 'so' 

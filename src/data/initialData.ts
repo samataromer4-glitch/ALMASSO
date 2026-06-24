@@ -5,6 +5,19 @@
 
 import { Category, Product, Order } from '../types';
 
+import pprPipes from '../assets/images/ppr_pipes_1782291176920.jpg';
+import steelRebars from '../assets/images/steel_rebars_1782291192959.jpg';
+import cementBag from '../assets/images/cement_bag_1782291208180.jpg';
+import cordlessDrill from '../assets/images/cordless_drill_1782291224252.jpg';
+import digitalMultimeter from '../assets/images/digital_multimeter_1782291242387.jpg';
+import waterPump from '../assets/images/water_pump_1782291259930.jpg';
+import roofingSheets from '../assets/images/roofing_sheets_1782291760256.jpg';
+import brassValve from '../assets/images/brass_valve_1782291774645.jpg';
+import toolSet from '../assets/images/tool_set_1782291789207.jpg';
+import ledFloodlight from '../assets/images/led_floodlight_1782291803843.jpg';
+import electricalWire from '../assets/images/electrical_wire_1782291816384.jpg';
+import safetyHelmet from '../assets/images/safety_helmet_1782291831740.jpg';
+
 export const CATEGORIES: Category[] = [
   { id: 'all', name: { so: 'Dhammaan Alaabta', en: 'All Products' }, icon: '✨' },
   { id: 'plumbing', name: { so: 'Qalabka Biyaha', en: 'Plumbing & Water Equipment' }, icon: '🚰' },
@@ -24,7 +37,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     },
     price: 24.00,
     discountPrice: 20.00,
-    image: "🚰",
+    image: pprPipes,
     description: {
       so: "Tuubbooyin PPR tayo sare leh oo loogu talagalay biyo-galinta guryaha iyo dhismayaasha. Waxay u adkaysan karaan cadaadis xoogan.",
       en: "Premium durable PPR piping solution for hot and cold residential water distribution systems."
@@ -43,7 +56,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     },
     price: 850.00,
     discountPrice: 810.00,
-    image: "🏗️",
+    image: steelRebars,
     description: {
       so: "Biraha stealka adag ee loo isticmaalo shubka iyo dhismaha derbiyada adag. Shahaado caalami ah leh.",
       en: "Industry-standard structural grade-60 carbon steel reinforcing bars. Perfect for masonry, foundations, and robust columns."
@@ -62,7 +75,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     },
     price: 9.50,
     discountPrice: 8.50,
-    image: "🧱",
+    image: cementBag,
     description: {
       so: "Shamiinto tayo sare leh oo si degdeg ah u qalasha isla markaana adkaynaysa shubka iyo guryaha dhismahooda.",
       en: "High-performance cement formula suitable for all general concrete, mortar, plastering, and bricklaying projects."
@@ -81,7 +94,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     },
     price: 120.00,
     discountPrice: 99.00,
-    image: "🛠️",
+    image: cordlessDrill,
     description: {
       so: "Driil awood badan oo shaqo kasta ku fududaynaya. Waxaa la socda baytari dhowr saacadood shaqaynaya iyo boorso qaadis ah.",
       en: "Heavy-duty cordless compact drill driver kit featuring variable speeds, ergonomics, and high-capacity battery."
@@ -100,7 +113,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     },
     price: 45.00,
     discountPrice: null,
-    image: "🔌",
+    image: digitalMultimeter,
     description: {
       so: "Qalabka cabbiraada danabka, caabbiga, iyo qulqulka korontada ee digital-ka ah. Aad ugu fiican farsamayaqaanka korontada.",
       en: "High-accuracy digital testing meter for measuring voltage, resistance, current, and continuous connectivity."
@@ -119,7 +132,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     },
     price: 320.00,
     discountPrice: 299.00,
-    image: "💧",
+    image: waterPump,
     description: {
       so: "Mashiin awood sare leh oo biyo dhoofinta iyo kor u soo jiidista guryaha u fududaynaya. Buuq yar oo tamar badbaadinaya.",
       en: "Powerful multi-purpose centrifugal pump for residential high-pressure flow and agricultural irrigation."
@@ -127,6 +140,120 @@ export const INITIAL_PRODUCTS: Product[] = [
     stock: 20,
     rating: 4.8,
     reviewsCount: 30,
+    isFlash: false
+  },
+  {
+    id: 'p-7',
+    category: 'building',
+    title: {
+      so: "Jiingad Cas oo Premium ah (Corrugated Roofing Sheet)",
+      en: "Premium Galvanized Corrugated Steel Roofing Sheets (Red)"
+    },
+    price: 18.50,
+    discountPrice: 16.00,
+    image: roofingSheets,
+    description: {
+      so: "Jiingad cas oo tayo sare leh, ka samaysan bir dhumuc weyn oo aan daxaloobin. Aad ugu fiican saqafka guryaha iyo bakhaarada.",
+      en: "Premium grade corrugated iron sheets with rust-resistant red coating. Ideal for durable residential and commercial roofing."
+    },
+    stock: 150,
+    rating: 4.9,
+    reviewsCount: 42,
+    isFlash: false
+  },
+  {
+    id: 'p-8',
+    category: 'plumbing',
+    title: {
+      so: "Khaanad naxas ah oo aad u adag (Heavy-Duty Brass Gate Valve)",
+      en: "Heavy-Duty Industrial Brass Gate Valve (2 Inch)"
+    },
+    price: 32.00,
+    discountPrice: 28.50,
+    image: brassValve,
+    description: {
+      so: "Khaanad naxas adag ah oo u adkaysata cadaadiska sare ee biyaha, kana hortagta wax kasta oo duloobid ama daadasho ah.",
+      en: "Full-port solid brass water flow control gate valve. Corrosion-resistant and highly rated for residential plumbing systems."
+    },
+    stock: 45,
+    rating: 4.7,
+    reviewsCount: 19,
+    isFlash: true
+  },
+  {
+    id: 'p-9',
+    category: 'tools',
+    title: {
+      so: "Boorsada Farsamada ee Chrome-Vanadium (Professional Tool Set)",
+      en: "Chrome-Vanadium Heavy-Duty Mechanic Socket Tool Set"
+    },
+    price: 145.00,
+    discountPrice: 125.00,
+    image: toolSet,
+    description: {
+      so: "Qalabka farsamada gacanta oo dhamaystiran, laga sameeyay birta adag ee Chrome-Vanadium. Aad ugu fiican garaashyada iyo shaqada guriga.",
+      en: "Complete professional tool set with durable chrome-vanadium finish, neatly organized inside an impact-resistant carrying case."
+    },
+    stock: 15,
+    rating: 4.8,
+    reviewsCount: 28,
+    isFlash: false
+  },
+  {
+    id: 'p-10',
+    category: 'electronics',
+    title: {
+      so: "Nalka Dibadda ee awoodda badan (Heavy-Duty LED Floodlight 200W)",
+      en: "Heavy-Duty Waterproof Outdoor LED Floodlight (200W)"
+    },
+    price: 55.00,
+    discountPrice: 49.00,
+    image: ledFloodlight,
+    description: {
+      so: "Nalka xoogan ee loogu talagalay bannaanka guryaha, shirkadaha ama garoomada. Waa biyo-celis, tamartana aad u badbaadiya.",
+      en: "Super bright, energy-efficient outdoor security floodlight with IP66 waterproofing and robust aluminum heat dissipation."
+    },
+    stock: 60,
+    rating: 4.5,
+    reviewsCount: 34,
+    isFlash: true
+  },
+  {
+    id: 'p-11',
+    category: 'electronics',
+    title: {
+      so: "Duubka Waayirka Korontada ee naxasta ah (Insulated Copper Cable)",
+      en: "Premium Insulated Copper Electrical Wire Roll (100 Meters)"
+    },
+    price: 85.00,
+    discountPrice: 79.00,
+    image: electricalWire,
+    description: {
+      so: "Waayir koronto oo tayo sare leh, ka samaysan naxas saafi ah oo dahaaran. Aad ugu badbaado badan rakibaadda korontada guryaha.",
+      en: "High-grade copper core insulated building wire for indoor/outdoor electrical wiring projects. Flame retardant jacket."
+    },
+    stock: 35,
+    rating: 4.9,
+    reviewsCount: 50,
+    isFlash: false
+  },
+  {
+    id: 'p-12',
+    category: 'tools',
+    title: {
+      so: "Koofiyada iyo Jaakada Badbaadada (Safety Helmet & High-Vis Vest)",
+      en: "Premium Construction Safety Set (Hard Hat & High-Vis Vest)"
+    },
+    price: 25.00,
+    discountPrice: 19.99,
+    image: safetyHelmet,
+    description: {
+      so: "Qalabka rasmiga ah ee badbaadada shaqaalaha dhismaha. Waxaa ku jira koofiyad adag oo jaalle ah iyo jaakad iftiimaysa.",
+      en: "Essential workplace safety kit containing an impact-resistant ABS hard hat helmet and a high-visibility orange safety vest."
+    },
+    stock: 80,
+    rating: 4.8,
+    reviewsCount: 22,
     isFlash: false
   }
 ];

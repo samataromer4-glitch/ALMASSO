@@ -7,6 +7,7 @@ import React from 'react';
 import { Search, ShoppingCart, Lock, Globe, Sparkles } from 'lucide-react';
 import { Language, Category } from '../types';
 import { TRANSLATIONS, CATEGORIES } from '../data/initialData';
+import { Logo } from './Logo';
 
 interface CustomerHeaderProps {
   lang: Language;
@@ -70,22 +71,10 @@ export const CustomerHeader: React.FC<CustomerHeaderProps> = ({
           {/* Logo element */}
           <div className="flex items-center justify-between w-full md:w-auto">
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center font-black text-2xl shadow-md ring-2 ring-amber-400/20">
-                A
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-white via-white to-slate-200 bg-clip-text text-transparent">
-                    {t.brand}
-                  </span>
-                  <span className="bg-amber-400 text-slate-950 font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">
-                    SO1
-                  </span>
-                </div>
-                <p className="text-[10px] font-bold text-amber-500 tracking-wider uppercase">
-                  {t.subBrand}
-                </p>
-              </div>
+              <Logo size="md" variant="light" />
+              <span className="bg-amber-400 text-slate-950 font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider self-center mb-0.5">
+                SO1
+              </span>
             </div>
 
             {/* Mobile shopping cart trigger */}
