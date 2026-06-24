@@ -168,7 +168,7 @@ export const TRANSLATIONS = {
     // Layout
     brand: "MAASH",
     subBrand: "Dukaan Toos ah",
-    headerMuted: "Nidaamka rasmiga ee Alaabso-Style",
+    headerMuted: "Dukaanka Rasmiga ah ee MAASH",
     customerMode: "Ku laabo Dukaanka",
     ownerPortal: "Gali Maamulka (Owner Login)",
     ownerPortalHeader: "MAASH Core Engine",
@@ -268,7 +268,7 @@ export const TRANSLATIONS = {
     // Layout
     brand: "MAASH",
     subBrand: "Direct Store",
-    headerMuted: "Official Alaabso-Style Gateway",
+    headerMuted: "Official MAASH Store",
     customerMode: "Back to Public Catalog",
     ownerPortal: "Gali Maamulka (Owner Login)",
     ownerPortalHeader: "MAASH Core Engine",

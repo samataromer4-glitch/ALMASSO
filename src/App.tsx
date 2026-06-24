@@ -18,7 +18,14 @@ import { Lock, ShoppingCart, Info, Check, Sparkles, X, Phone, ShoppingBag } from
 import { supabase, mapProductToDb, mapProductFromDb, mapOrderToDb, mapOrderFromDb } from './lib/supabase';
 
 export default function App() {
-  const [lang, setLang] = useState<Language>('so');
+  const [lang, setLang] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem('maash_lang');
+      return (saved as Language) || 'en';
+    } catch {
+      return 'en';
+    }
+  });
   const [currentView, setCurrentView] = useState<'customer' | 'admin'>('customer');
 
   // Load state from LocalStorage so CRUD edits and Order records persist beautifully
@@ -225,6 +232,14 @@ export default function App() {
       // ignore
     }
   }, [cart]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('maash_lang', lang);
+    } catch (e) {
+      // ignore
+    }
+  }, [lang]);
 
   const t = TRANSLATIONS[lang];
 
@@ -541,7 +556,7 @@ export default function App() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-slate-800 text-center font-medium">
-              <p>© 2026 MAASH Single-Vendor Retailer. Handcrafted with Alaabso-style layouts.</p>
+              <p>© 2026 MAASH Single-Vendor Retailer. All Rights Reserved.</p>
             </div>
           </footer>
 
